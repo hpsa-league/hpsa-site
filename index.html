@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hendon Park Sports Association</title>
+  <meta name="description" content="Hendon Park Sports Association: standings, leaders, schedule and news for our slo-pitch divisions.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="home">
+  <div id="site-header"></div>
+
+  <main id="main">
+    <section class="hero">
+      <div class="wrap">
+        <div id="countdown"></div>
+      </div>
+    </section>
+    <div class="stitch" aria-hidden="true"></div>
+
+    <section class="content" id="divisions">
+      <div class="wrap">
+        <h2 class="section-title">Divisions</h2>
+        <p class="section-hint">Choose your night to see the standings and the division leaders.</p>
+
+        <div class="div-grid">
+          <a class="div-card" href="monday.html" data-division-card="monday">
+            <span class="div-day">Monday</span>
+            <span class="div-label">Division 5</span>
+            <span class="div-first"></span>
+            <span class="div-go">Standings and leaders</span>
+          </a>
+          <a class="div-card" href="tuesday.html" data-division-card="tuesday">
+            <span class="div-day">Tuesday</span>
+            <span class="div-label">Division 3</span>
+            <span class="div-first"></span>
+            <span class="div-go">Standings and leaders</span>
+          </a>
+          <a class="div-card" href="wednesday.html" data-division-card="wednesday">
+            <span class="div-day">Wednesday</span>
+            <span class="div-label">Division 4</span>
+            <span class="div-first"></span>
+            <span class="div-go">Standings and leaders</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="config.js"></script>
+  <script src="sample-data.js"></script>
+  <script src="site.js"></script>
+</body>
+</html>

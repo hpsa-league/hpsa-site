@@ -574,6 +574,10 @@
       if (ri >= 0 && !G.result) G.result = r[ri];
       G.rows.push(keep.map(function (i) { return r[i]; }));
     });
+    // Show "Jun 3 vs Vendetta" when the date and opponent are filled in; otherwise fall back to "Game 3".
+    order.forEach(function (G) {
+      G.title = G.date && G.opp ? G.date + ' vs ' + G.opp : G.opp ? 'vs ' + G.opp : G.date ? G.date : G.label;
+    });
     return { headers: keep.map(function (i) { return h[i]; }), games: order };
   }
 
@@ -654,9 +658,8 @@
       if (!list.length) { problem(box, 'No games have been played yet.'); return; }
       var ul = el('ul', { class: 'game-grid' });
       list.forEach(function (G) {
-        var a = el('a', { class: 'game-link', href: gameHref(slug, G) }, el('span', { class: 'game-name', text: G.label }));
-        if (G.opp) a.append(el('span', { class: 'game-detail', text: 'vs ' + G.opp }));
-        if (G.date) a.append(el('span', { class: 'game-detail', text: G.date }));
+        var a = el('a', { class: 'game-link', href: gameHref(slug, G) }, el('span', { class: 'game-name', text: G.title }));
+        if (G.title !== G.label) a.append(el('span', { class: 'game-detail', text: G.label }));
         if (G.result) a.append(el('span', { class: 'game-detail game-result', text: G.result }));
         ul.append(el('li', {}, a));
       });
@@ -695,11 +698,11 @@
           return;
         }
         var G = list[at];
-        document.title = G.label + ' | ' + t.name + ' | HPSA';
-        $('#game-title').textContent = G.label;
+        document.title = G.title + ' | ' + t.name + ' | HPSA';
+        $('#game-title').textContent = G.title;
         var bits = [t.name];
-        var extra = [G.opp ? 'vs ' + G.opp : '', G.date, G.result].filter(Boolean);
-        $('#game-sub').textContent = extra.length ? t.name + ' ' + extra.join(', ') : t.name;
+        var extra = [G.title !== G.label ? G.label : '', G.result].filter(Boolean);
+        $('#game-sub').textContent = extra.length ? t.name + ' · ' + extra.join(' · ') : t.name;
         showSampleNote(res.sample);
 
         host.append(el('p', { class: 'section-hint', text: 'Select any stat to rank the players by it. Select it again to flip the order.' }));
@@ -708,8 +711,8 @@
         buildTable(box, { headers: g.headers, rows: G.rows }, { computedRank: false, search: false, footer: totalsRow(g.headers, G.rows, g.nameI) });
 
         var pager = el('div', { class: 'pager' });
-        pager.append(at > 0 ? el('a', { href: gameHref(slug, list[at - 1]) }, 'Previous: ' + list[at - 1].label) : el('span', {}));
-        pager.append(at < list.length - 1 ? el('a', { href: gameHref(slug, list[at + 1]) }, 'Next: ' + list[at + 1].label) : el('span', {}));
+        pager.append(at > 0 ? el('a', { href: gameHref(slug, list[at - 1]) }, 'Previous: ' + list[at - 1].title) : el('span', {}));
+        pager.append(at < list.length - 1 ? el('a', { href: gameHref(slug, list[at + 1]) }, 'Next: ' + list[at + 1].title) : el('span', {}));
         host.append(pager);
       }).catch(function () {
         host.textContent = '';

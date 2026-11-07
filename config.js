@@ -39,7 +39,7 @@ window.HPSA = {
     monday: {
       name: "Monday",
       standingsUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vST4tdwmHnIc2vsD2i8rw3ezjpMmjXbHuSQIzMPrZ9FNstdFRRxJ94D2b3r5RaoOufs1PiL9bZOqups/pub?gid=1161560956&single=true&output=csv",
-      leadersUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR2Sgq4hJvvpr5x-F5wFaqJsy7XVhZTcWAZDi8UChvq8t_LBo19xdrOkrMODwp25JeEiBPop0pUVw8C/pub?gid=0&single=true&output=csv"
+      leadersUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vST4tdwmHnIc2vsD2i8rw3ezjpMmjXbHuSQIzMPrZ9FNstdFRRxJ94D2b3r5RaoOufs1PiL9bZOqups/pub?gid=2014465808&single=true&output=csv"
     },
     tuesday: {
       name: "Tuesday",

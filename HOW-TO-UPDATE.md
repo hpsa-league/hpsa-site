@@ -15,7 +15,6 @@ The site reads your Google Sheet charts. Right now it shows **sample data** unti
    ```
    monday: {
      name: "Monday",
-     label: "Division 5",
      standingsUrl: "PASTE THE STANDINGS LINK HERE",
      leadersUrl: "PASTE THE LEADERS LINK HERE"
    },
@@ -51,6 +50,31 @@ Open `config.js` and find `countdown`. Add, change or remove lines in the list:
 3. A team with no logo shows a coloured badge with its initials, so nothing breaks while you collect them.
 
 If a team name changes, rename its logo file to match, or add a line under `logos` in `config.js` that points the new name to the old file.
+
+## 4. Show game-by-game stats for a team
+
+A team with its own page (Globo Gym, to start) shows its season totals and a page for every game.
+
+1. In the workbook, make a new tab called **All Games** (click the + at the bottom left).
+2. Click cell **A1**. Then click in the formula bar at the top (not just the cell) and paste the formula from `all-games-formula.txt`. It stacks Game1 to Game17 into one list with a Game column.
+   - It assumes the tabs are named exactly `Game1`, `Game2` and so on, with the headings in row 1 and players in rows 2 to 20, columns A to P. If your tab names have a space (`Game 1`), change them to match.
+3. Publish that one tab: **File > Share > Publish to web**, pick **All Games**, choose **Comma-separated values (.csv)**, then **Publish**.
+4. Paste the link into `config.js` under `teams`, next to `gamesUrl`.
+
+Players with no stats in a game are left out of that game, and a game with no stats yet does not appear in the list. Each game page shows the team totals at the bottom, and AVG, OBP and SLG are worked out from the totals.
+
+**Opponent, date and result:** make a tab called **Game Info** with the headings `Game`, `Opponent`, `Date`, `Result` in row 1, then one row per game (`Game 1`, `Game 2` and so on, typed exactly like that). Fill in a row after each game, for example `Game 4`, `Vendetta`, `Jun 3`, `W 12-8`. Then put the formula from `all-games-formula-with-details.txt` in cell A1 of the **All Games** tab (replacing the old one). The link does not change. On the site, each game is then named by its date and opponent (for example "Jun 3 vs Vendetta"), and games with no opponent or date yet still show as "Game 4".
+
+**Adding a team:** copy the Globo Gym block under `teams` in `config.js`, change the name (the key is the name in lowercase with dashes), and add its two links. Its name in the standings then links to its page.
+
+## Getting found on Google
+
+The site already has page titles, descriptions, a sitemap (`sitemap.xml`) and a `robots.txt`. Two jobs for you:
+
+1. **Register with Google Search Console (free):** go to search.google.com/search-console, add the site's address, and verify it. Then open **Sitemaps** and enter `sitemap.xml`. This tells Google the site exists.
+2. **When hpsa.ca points to this site:** the address `https://hpsa-league.github.io/hpsa-site/` appears in every page's `<link rel="canonical">`, in `sitemap.xml`, `robots.txt` and the structured data on `index.html`. Replace it with `https://hpsa.ca/` in those files.
+
+Other free things that help: make sure the league has a Google Business Profile and that the address of Hendon Park is on it, ask local groups to link to the site, and keep the standings and news fresh.
 
 ## Changing the menu or page text
 

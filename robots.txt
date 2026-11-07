@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://hpsa-league.github.io/hpsa-site/sitemap.xml

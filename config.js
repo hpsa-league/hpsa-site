@@ -38,21 +38,42 @@ window.HPSA = {
   divisions: {
     monday: {
       name: "Monday",
-      label: "Division 5",
       standingsUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vST4tdwmHnIc2vsD2i8rw3ezjpMmjXbHuSQIzMPrZ9FNstdFRRxJ94D2b3r5RaoOufs1PiL9bZOqups/pub?gid=1161560956&single=true&output=csv",
       leadersUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR2Sgq4hJvvpr5x-F5wFaqJsy7XVhZTcWAZDi8UChvq8t_LBo19xdrOkrMODwp25JeEiBPop0pUVw8C/pub?gid=0&single=true&output=csv"
     },
     tuesday: {
       name: "Tuesday",
-      label: "Division 3",
       standingsUrl: "",
       leadersUrl: ""
     },
     wednesday: {
       name: "Wednesday",
-      label: "Division 4",
       standingsUrl: "",
       leadersUrl: ""
+    }
+  },
+
+  /* ---- TEAM PAGES -------------------------------------------------------
+     A team listed here gets its own page (click the team name in the
+     standings): season totals plus a page for every game.
+     The key is the team name in lowercase with dashes instead of spaces.
+
+       seasonUrl : the published CSV of the team's season totals tab.
+       gamesUrl  : the published CSV of ONE combined tab with a row for every
+                   player in every game (see HOW-TO-UPDATE.md, section 4).
+                   Leave it empty until that tab exists.                      */
+  teams: {
+    "globo-gym-purple-cobras": {
+      name: "Globo Gym Purple Cobras",
+      division: "monday",
+      seasonUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR2Sgq4hJvvpr5x-F5wFaqJsy7XVhZTcWAZDi8UChvq8t_LBo19xdrOkrMODwp25JeEiBPop0pUVw8C/pub?gid=0&single=true&output=csv",
+      gamesUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR2Sgq4hJvvpr5x-F5wFaqJsy7XVhZTcWAZDi8UChvq8t_LBo19xdrOkrMODwp25JeEiBPop0pUVw8C/pub?gid=217381119&single=true&output=csv"
+    },
+    "crew": {
+      name: "Crew",
+      division: "monday",
+      seasonUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRok8fnPsReQCVvcvDoHyjTMHN8idZ2VnHasc8s_ilxbnnyogQ2HHPgleiKpnRzFYzjbl_o44ta32aw/pub?gid=0&single=true&output=csv",
+      gamesUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRok8fnPsReQCVvcvDoHyjTMHN8idZ2VnHasc8s_ilxbnnyogQ2HHPgleiKpnRzFYzjbl_o44ta32aw/pub?gid=217381119&single=true&output=csv"
     }
   },
 
@@ -80,9 +101,9 @@ window.HPSA = {
   /* ---- MENU ------------------------------------------------------------ */
   nav: [
     { label: "Divisions", children: [
-      { label: "Monday (Division 5)",    href: "monday.html" },
-      { label: "Tuesday (Division 3)",   href: "tuesday.html" },
-      { label: "Wednesday (Division 4)", href: "wednesday.html" }
+      { label: "Monday",    href: "monday.html" },
+      { label: "Tuesday",   href: "tuesday.html" },
+      { label: "Wednesday", href: "wednesday.html" }
     ]},
     { label: "Schedule",             href: "schedule.html" },
     { label: "Playoffs",             href: "playoffs.html" },

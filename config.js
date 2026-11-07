@@ -70,7 +70,7 @@ window.HPSA = {
       name: "Globo Gym Purple Cobras",
       division: "monday",
       seasonUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR2Sgq4hJvvpr5x-F5wFaqJsy7XVhZTcWAZDi8UChvq8t_LBo19xdrOkrMODwp25JeEiBPop0pUVw8C/pub?gid=0&single=true&output=csv",
-      gamesUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR2Sgq4hJvvpr5x-F5wFaqJsy7XVhZTcWAZDi8UChvq8t_LBo19xdrOkrMODwp25JeEiBPop0pUVw8C/pub?gid=949594357&single=true&output=csv"
+      gamesUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR2Sgq4hJvvpr5x-F5wFaqJsy7XVhZTcWAZDi8UChvq8t_LBo19xdrOkrMODwp25JeEiBPop0pUVw8C/pub?gid=217381119&single=true&output=csv"
     }
   },
 

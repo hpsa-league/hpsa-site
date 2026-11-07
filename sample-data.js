@@ -67,6 +67,59 @@
     wednesday: make(["Caciques", "Cardinal Marble", "Moose Knuckles", "nWo", "The Sailor Saints", "The Batstreet Boys", "South Park Cows", "Parkview Athletics"], 37, 15)
   };
 
+
+  // Globo Gym team page sample: invented players, 17 games (14 played, 3 still to play).
+  (function () {
+    var r = rng(77);
+    var NAMES = ["Sample Player A", "Sample Player B", "Sample Player C", "Sample Player D", "Sample Player E",
+                 "Sample Player F", "Sample Player G", "Sample Player H", "Sample Player I", "Sample Player J"];
+    var OPP = ["Vendetta", "Crew", "Shift Disturbers", "Dodgers", "Rosie’s Degenerates", "Gugger", "Face Melters"];
+    var MON = ["May", "Jun", "Jul", "Aug", "Sep"];
+    var STATS = ["At Bats", "Hits", "Runs", "RBI", "1B", "2B", "3B", "HR", "SB", "BB", "SO", "SF"];
+    function r3(n) { var t = n.toFixed(3); return n < 1 ? t.replace(/^0/, "") : t; }
+    function rates(a) {
+      var avg = a.ab ? a.h / a.ab : null;
+      var pa = a.ab + a.bb + a.sf;
+      var obp = pa ? (a.h + a.bb) / pa : null;
+      var slg = a.ab ? (a.b1 + 2 * a.b2 + 3 * a.b3 + 4 * a.hr) / a.ab : null;
+      return [avg === null ? "" : r3(avg), obp === null ? "" : r3(obp), slg === null ? "" : r3(slg)];
+    }
+    var totals = NAMES.map(function () { return { ab: 0, h: 0, r: 0, rbi: 0, b1: 0, b2: 0, b3: 0, hr: 0, sb: 0, bb: 0, so: 0, sf: 0 }; });
+    var games = [["Game", "Opponent", "Date", "Result", "Player Name"].concat(STATS, ["AVG", "OBP", "SLG"])];
+    for (var g = 1; g <= 17; g++) {
+      var d = new Date(2026, 4, 4 + 7 * (g - 1));
+      var date = MON[d.getMonth() - 4] + " " + d.getDate();
+      var played = g <= 14, opp = OPP[(g - 1) % OPP.length], teamRuns = 0, rows = [];
+      NAMES.forEach(function (n, k) {
+        var here = played && r() < 0.82;
+        if (!here) { rows.push([n].concat(STATS.map(function () { return ""; }), ["", "", ""])); return; }
+        var a = { ab: 3 + Math.floor(r() * 3), h: 0, r: 0, rbi: 0, b1: 0, b2: 0, b3: 0, hr: 0, sb: 0, bb: r() < 0.25 ? 1 : 0, so: r() < 0.1 ? 1 : 0, sf: r() < 0.08 ? 1 : 0 };
+        for (var i = 0; i < a.ab; i++) {
+          if (r() < 0.5) {
+            a.h++;
+            var x = r();
+            if (x < 0.12) a.hr++; else if (x < 0.16) a.b3++; else if (x < 0.34) a.b2++; else a.b1++;
+          }
+        }
+        a.r = Math.floor(r() * (a.h + 1.6));
+        a.rbi = a.hr + Math.floor(r() * (a.h + 1));
+        teamRuns += a.r;
+        var t = totals[k];
+        Object.keys(t).forEach(function (key) { t[key] += a[key]; });
+        rows.push([n, a.ab, a.h, a.r, a.rbi, a.b1, a.b2, a.b3, a.hr, a.sb, a.bb, a.so, a.sf].concat(rates(a)).map(String));
+      });
+      var oppRuns = Math.max(0, Math.round(teamRuns + (r() - 0.5) * 12));
+      var result = !played ? "" : (teamRuns > oppRuns ? "W " : teamRuns < oppRuns ? "L " : "T ") + teamRuns + "-" + oppRuns;
+      rows.forEach(function (row) { games.push(["Game " + g, played ? opp : "", played ? date : "", result].concat(row)); });
+    }
+    var season = [["Player Name"].concat(STATS, ["AVG", "OBP", "SLG"])];
+    NAMES.forEach(function (n, k) {
+      var t = totals[k];
+      season.push([n, t.ab, t.h, t.r, t.rbi, t.b1, t.b2, t.b3, t.hr, t.sb, t.bb, t.so, t.sf].concat(rates(t)).map(String));
+    });
+    window.HPSA_SAMPLE.teams = { "globo-gym-purple-cobras": { season: csv(season), games: csv(games) } };
+  })();
+
   // Monday leaders in the real column layout of the league's sheet (used only when no link is set).
   window.HPSA_SAMPLE.monday.leaders = csv([
     ["Player Name", "At Bats", "Hits", "Runs", "RBI", "1B", "2B", "3B", "HR", "SB", "BB", "SO", "SF", "AVG", "OBP", "SLG"],

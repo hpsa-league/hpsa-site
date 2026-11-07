@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Team | HPSA</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="team">
+  <div id="site-header"></div>
+
+  <main id="main">
+    <section class="page-head">
+      <div class="wrap">
+        <div class="team-head">
+          <span id="team-logo"></span>
+          <div>
+            <h1 id="team-name">Team</h1>
+            <p class="page-sub" id="team-sub"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="stitch" aria-hidden="true"></div>
+
+    <div class="content">
+      <div class="wrap">
+        <p class="notice" id="sample-note" hidden>You are looking at sample data. Add this team's sheet links in config.js to show real stats.</p>
+        <div id="team-view">
+          <section class="block">
+            <h2 class="section-title">Season totals</h2>
+            <p class="section-hint">Select any stat to rank the players by it. Select it again to flip the order.</p>
+            <div id="team-season"><p class="empty">Loading season totals&hellip;</p></div>
+          </section>
+
+          <section class="block">
+            <h2 class="section-title">Game by game</h2>
+            <p class="section-hint">Choose a game to see every player's stats from that night.</p>
+            <div id="team-games"><p class="empty">Loading games&hellip;</p></div>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="config.js"></script>
+  <script src="sample-data.js"></script>
+  <script src="site.js"></script>
+</body>
+</html>

@@ -188,6 +188,10 @@
   }
 
   function teamCell(name) {
+    var slug = slugify(name);
+    if ((CFG.teams || {})[slug]) {
+      return el('a', { class: 'team-cell team-link', href: 'team.html#' + slug }, teamLogo(name), el('span', { text: name }));
+    }
     return el('span', { class: 'team-cell' }, teamLogo(name), el('span', { text: name }));
   }
 
@@ -215,7 +219,7 @@
     var items = rows.map(function (r, n) { return { r: r, n: n }; });
     var sort = { i: -1, dir: 1 }, query = '', showAll = false;
 
-    var wrap = el('div', { class: 'table-wrap' });
+    var wrap = el('div', { class: 'table-wrap split' });
     var note = el('p', { class: 'table-note', 'aria-live': 'polite' });
     var tools = el('div', { class: 'table-tools' });
     var search, toggle;
@@ -253,13 +257,94 @@
       render();
     }
 
+    // Left panel (never scrolls): the rank number and the name. Right panel: every other column, scrolls sideways.
+    var frozenComputed = !!opts.computedRank;
+    var frozenIdx = [];
+    if (rankI >= 0 && !opts.computedRank) frozenIdx.push(rankI);
+    if (mainI >= 0 && frozenIdx.indexOf(mainI) === -1) frozenIdx.push(mainI);
+    var scrollIdx = cols.filter(function (i) { return frozenIdx.indexOf(i) === -1; });
+    var hasFrozen = frozenComputed || frozenIdx.length > 0;
+
     function classFor(i) {
       var c = [];
-      if (i === rankI) c.push('col-rank', 'is-sticky', 'sticky-0');
-      else if (i === mainI) c.push('t-left', 'is-sticky', rankI >= 0 || opts.computedRank ? 'sticky-1' : 'sticky-1-only');
-      else if (i === teamI || !numeric[i]) c.push('t-left');
+      if (i === rankI) c.push('col-rank');
+      else if (i === mainI || i === teamI || !numeric[i]) c.push('t-left');
       if (i === sort.i) c.push('is-sorted');
       return c.join(' ');
+    }
+
+    function headCell(i) {
+      var th = el('th', { scope: 'col', class: classFor(i) });
+      th.setAttribute('aria-sort', i === sort.i ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none');
+      if (i === rankI) {
+        th.textContent = headers[i];
+      } else {
+        var btn = el('button', { class: 'sort-btn', type: 'button', title: 'Sort by ' + headers[i] },
+          headers[i], el('span', { class: 'sort-ind', 'aria-hidden': 'true', text: i === sort.i ? (sort.dir === 1 ? '▲' : '▼') : '⇅' }));
+        btn.addEventListener('click', function () { clickHeader(i); });
+        th.append(btn);
+      }
+      return th;
+    }
+
+    function bodyCell(it, i) {
+      var td = el('td', { class: classFor(i) });
+      var v = it.r[i];
+      if (i === teamI && v) td.append(teamCell(v));
+      else if (/^(avg|obp|slg)$/i.test(headers[i].trim()) && isNum(v)) td.textContent = rate3(parseFloat(v));
+      else if (i === strkI && /^[WLT]/i.test(v)) td.append(el('span', { class: /^W/i.test(v) ? 'strk-w' : /^L/i.test(v) ? 'strk-l' : '', text: v }));
+      else td.textContent = v;
+      return td;
+    }
+
+    function buildPane(list, withComputed, paneClass, view) {
+      var table = el('table', { class: 'data ' + paneClass });
+      var tr = el('tr');
+      if (withComputed) tr.append(el('th', { scope: 'col', class: 'col-rank', text: '#' }));
+      list.forEach(function (i) { tr.append(headCell(i)); });
+      table.append(el('thead', {}, tr));
+      var tbody = el('tbody');
+      view.forEach(function (it) {
+        var row = el('tr');
+        if (withComputed) row.append(el('td', { class: 'col-rank', text: it.rank }));
+        list.forEach(function (i) { row.append(bodyCell(it, i)); });
+        tbody.append(row);
+      });
+      table.append(tbody);
+      if (opts.footer) {
+        var ftr = el('tr', { class: 'foot-row' });
+        if (withComputed) ftr.append(el('td', { class: 'col-rank', text: '' }));
+        list.forEach(function (i) {
+          var fv = opts.footer[i] || '';
+          ftr.append(el('td', { class: classFor(i), text: /^(avg|obp|slg)$/i.test(headers[i].trim()) && isNum(fv) ? rate3(parseFloat(fv)) : fv }));
+        });
+        table.append(el('tfoot', {}, ftr));
+      }
+      return table;
+    }
+
+    // Keep each row the same height in both panels (names can wrap onto several lines).
+    function syncRows() {
+      var l = wrap.querySelector('.pane-frozen'), r = wrap.querySelector('.pane-scroll');
+      if (!l || !r) return;
+      var lr = l.rows, rr = r.rows, k, n = Math.min(lr.length, rr.length);
+      for (k = 0; k < n; k++) { lr[k].style.height = ''; rr[k].style.height = ''; }
+      var hs = [];
+      for (k = 0; k < n; k++) hs.push(Math.max(lr[k].getBoundingClientRect().height, rr[k].getBoundingClientRect().height));
+      for (k = 0; k < n; k++) { lr[k].style.height = rr[k].style.height = hs[k] + 'px'; }
+    }
+
+    function linkHover() {
+      var l = wrap.querySelector('.pane-frozen'), r = wrap.querySelector('.pane-scroll');
+      if (!l || !r) return;
+      for (var k = 1; k < Math.min(l.rows.length, r.rows.length); k++) {
+        (function (a, b) {
+          [a, b].forEach(function (row) {
+            row.addEventListener('mouseenter', function () { a.classList.add('is-hover'); b.classList.add('is-hover'); });
+            row.addEventListener('mouseleave', function () { a.classList.remove('is-hover'); b.classList.remove('is-hover'); });
+          });
+        })(l.rows[k], r.rows[k]);
+      }
     }
 
     function render() {
@@ -274,41 +359,19 @@
       var limited = opts.limit && !showAll && !query && total > opts.limit;
       if (limited) view = view.slice(0, opts.limit);
 
-      var table = el('table', { class: 'data' });
-      var tr = el('tr');
-      if (opts.computedRank) tr.append(el('th', { scope: 'col', class: 'col-rank is-sticky sticky-0', text: '#' }));
-      cols.forEach(function (i) {
-        var th = el('th', { scope: 'col', class: classFor(i) });
-        th.setAttribute('aria-sort', i === sort.i ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none');
-        if (i === rankI) {
-          th.textContent = headers[i];
-        } else {
-          var btn = el('button', { class: 'sort-btn', type: 'button', title: 'Sort by ' + headers[i] },
-            headers[i], el('span', { class: 'sort-ind', 'aria-hidden': 'true', text: i === sort.i ? (sort.dir === 1 ? '▲' : '▼') : '⇅' }));
-          btn.addEventListener('click', function () { clickHeader(i); });
-          th.append(btn);
-        }
-        tr.append(th);
-      });
-      table.append(el('thead', {}, tr));
+      var oldScroller = wrap.querySelector('.pane-scroll-wrap');
+      var keepLeft = oldScroller ? oldScroller.scrollLeft : 0;
 
-      var tbody = el('tbody');
-      view.forEach(function (it) {
-        var row = el('tr');
-        if (opts.computedRank) row.append(el('td', { class: 'col-rank is-sticky sticky-0', text: it.rank }));
-        cols.forEach(function (i) {
-          var td = el('td', { class: classFor(i) });
-          var v = it.r[i];
-          if (i === teamI && v) td.append(teamCell(v));
-          else if (i === strkI && /^[WLT]/i.test(v)) td.append(el('span', { class: /^W/i.test(v) ? 'strk-w' : /^L/i.test(v) ? 'strk-l' : '', text: v }));
-          else td.textContent = v;
-          row.append(td);
-        });
-        tbody.append(row);
-      });
-      table.append(tbody);
       wrap.textContent = '';
-      wrap.append(table);
+      if (hasFrozen) {
+        wrap.append(el('div', { class: 'pane-fixed' }, buildPane(frozenIdx, frozenComputed, 'pane-frozen', view)));
+      }
+      var scroller = el('div', { class: 'pane-scroll-wrap', tabindex: '0', role: 'region', 'aria-label': 'Scroll sideways for more stats' },
+        buildPane(scrollIdx, false, 'pane-scroll', view));
+      wrap.append(scroller);
+      scroller.scrollLeft = keepLeft;
+      syncRows();
+      linkHover();
 
       if (!total) {
         note.textContent = query ? 'No matches for “' + search.value.trim() + '”.' : '';
@@ -322,6 +385,9 @@
         toggle.textContent = showAll ? 'Show top ' + opts.limit : 'Show all ' + rows.length;
       }
     }
+
+    window.addEventListener('resize', syncRows);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(syncRows);
 
     host.textContent = '';
     if (tools.children.length) host.append(tools);
@@ -472,12 +538,198 @@
     });
   }
 
+  /* ---------------- team and game pages ---------------- */
+  var RATE_RE = /^(avg|obp|slg)$/i;
+  var NAME_RE = /^(player(\s*name)?|name)$/i;
+
+  function findCol(headers, re) {
+    for (var i = 0; i < headers.length; i++) if (re.test(headers[i].trim())) return i;
+    return -1;
+  }
+
+  // .810, .000 and 1.810 - baseball style
+  function rate3(n) {
+    if (!isFinite(n)) return '';
+    var t = n.toFixed(3);
+    return n < 1 ? t.replace(/^0/, '') : t;
+  }
+
+  // The combined tab has one row per player per game and a "Game" column.
+  // Optional extra columns: Opponent, Date, Result.
+  function groupGames(table) {
+    var h = table.headers;
+    var gi = findCol(h, /^game$/i), oi = findCol(h, /^(opponent|opp|vs)$/i),
+        di = findCol(h, /^date$/i), ri = findCol(h, /^(result|score|final)$/i);
+    if (gi < 0) return null;
+    var meta = [gi, oi, di, ri];
+    var keep = h.map(function (_, i) { return i; }).filter(function (i) { return meta.indexOf(i) === -1; });
+    var order = [], map = {};
+    table.rows.forEach(function (r) {
+      var label = r[gi];
+      if (!label) return;
+      var G = map[label];
+      if (!G) { G = map[label] = { label: label, slug: slugify(label), rows: [], opp: '', date: '', result: '' }; order.push(G); }
+      if (oi >= 0 && !G.opp) G.opp = r[oi];
+      if (di >= 0 && !G.date) G.date = r[di];
+      if (ri >= 0 && !G.result) G.result = r[ri];
+      G.rows.push(keep.map(function (i) { return r[i]; }));
+    });
+    return { headers: keep.map(function (i) { return h[i]; }), games: order };
+  }
+
+  // A player who has no stats in a game (blank or all zeros) is left out of that game.
+  function activeRow(headers, row, nameI) {
+    return headers.some(function (hd, i) {
+      return i !== nameI && !RATE_RE.test(hd.trim()) && isNum(row[i]) && parseFloat(row[i]) !== 0;
+    });
+  }
+
+  // Team totals for one game: counting stats are added up, AVG/OBP/SLG are worked out from the totals.
+  function totalsRow(headers, rows, nameI) {
+    var sums = headers.map(function (hd, i) {
+      if (i === nameI) return 'Team totals';
+      if (RATE_RE.test(hd.trim())) return '';
+      var any = false, tot = 0;
+      rows.forEach(function (r) { if (isNum(r[i])) { any = true; tot += parseFloat(r[i]); } });
+      return any ? String(tot) : '';
+    });
+    function S(re) { var i = findCol(headers, re); return i < 0 || sums[i] === '' ? NaN : parseFloat(sums[i]); }
+    function put(re, val) { var i = findCol(headers, re); if (i >= 0) sums[i] = val; }
+    var ab = S(/^(at bats|ab)$/i), hits = S(/^(hits|h)$/i), bb = S(/^(bb|walks)$/i), sf = S(/^sf$/i);
+    var b1 = S(/^1b$/i), b2 = S(/^2b$/i), b3 = S(/^3b$/i), hr = S(/^hr$/i);
+    if (isNaN(b1) && isFinite(hits + b2 + b3 + hr)) b1 = hits - b2 - b3 - hr;
+    if (ab > 0 && isFinite(hits)) put(/^avg$/i, rate3(hits / ab));
+    if (isFinite(ab + hits + bb)) {
+      var pa = ab + bb + (isFinite(sf) ? sf : 0);
+      if (pa > 0) put(/^obp$/i, rate3((hits + bb) / pa));
+    }
+    if (ab > 0 && isFinite(b1 + b2 + b3 + hr)) put(/^slg$/i, rate3((b1 + 2 * b2 + 3 * b3 + 4 * hr) / ab));
+    return sums;
+  }
+
+  function loadGames(slug) {
+    var t = CFG.teams[slug], smp = (SAMPLE.teams || {})[slug] || {};
+    return loadTable(t.gamesUrl, smp.games).then(function (res) {
+      var g = groupGames(res.table);
+      if (!g) throw new Error('no Game column');
+      g.nameI = findCol(g.headers, NAME_RE);
+      g.games = g.games.map(function (G) {
+        G.rows = G.rows.filter(function (r) { return r[g.nameI] && activeRow(g.headers, r, g.nameI); });
+        return G;
+      }).filter(function (G) { return G.rows.length; });
+      return { grouped: g, sample: res.sample };
+    });
+  }
+
+  function gameHref(slug, G) { return 'game.html#' + slug + '--' + G.slug; }
+  function showSampleNote(used) { var n = $('#sample-note'); if (n && used) n.hidden = false; }
+  function problem(host, text) { host.textContent = ''; host.append(el('p', { class: 'empty', text: text })); }
+
+  function initTeamPage() {
+    var host = $('#team-view');
+    if (!host || document.body.getAttribute('data-page') !== 'team') return;
+    var slug = decodeURIComponent(location.hash.replace(/^#/, ''));
+    var t = (CFG.teams || {})[slug];
+    if (!t) { problem(host, 'We could not find that team. Open a division and choose the team from the standings.'); return; }
+
+    var div = CFG.divisions[t.division], smp = (SAMPLE.teams || {})[slug] || {};
+    document.title = t.name + ' | HPSA';
+    $('#team-name').textContent = t.name;
+    $('#team-logo').append(teamLogo(t.name));
+    if (div) $('#team-sub').append(el('a', { href: t.division + '.html' }, div.name + ' (' + div.label + ')'));
+
+    var used = false;
+    var season = loadTable(t.seasonUrl || (div && div.leadersUrl) || '', smp.season).then(function (res) {
+      if (res.sample) used = true;
+      if (!res.table.headers.length) throw new Error('empty');
+      buildTable($('#team-season'), res.table, { computedRank: true, search: false });
+    }).catch(function () {
+      problem($('#team-season'), 'Season totals can’t be shown right now. Check that the sheet tab is still published and the link in config.js is correct.');
+    });
+
+    var games = loadGames(slug).then(function (res) {
+      if (res.sample) used = true;
+      var box = $('#team-games');
+      var list = res.grouped.games;
+      if (!list.length) { problem(box, 'No games have been played yet.'); return; }
+      var ul = el('ul', { class: 'game-grid' });
+      list.forEach(function (G) {
+        var a = el('a', { class: 'game-link', href: gameHref(slug, G) }, el('span', { class: 'game-name', text: G.label }));
+        if (G.opp) a.append(el('span', { class: 'game-detail', text: 'vs ' + G.opp }));
+        if (G.date) a.append(el('span', { class: 'game-detail', text: G.date }));
+        if (G.result) a.append(el('span', { class: 'game-detail game-result', text: G.result }));
+        ul.append(el('li', {}, a));
+      });
+      box.textContent = '';
+      box.append(ul);
+    }).catch(function () {
+      problem($('#team-games'), 'Game-by-game stats can’t be shown right now. Check that the combined games tab is published and its link is in config.js.');
+    });
+
+    Promise.all([season, games]).then(function () { showSampleNote(used); });
+  }
+
+  function initGamePage() {
+    var host = $('#game-view');
+    if (!host || document.body.getAttribute('data-page') !== 'game') return;
+
+    function render() {
+      var parts = decodeURIComponent(location.hash.replace(/^#/, '')).split('--');
+      var slug = parts[0], gslug = parts[1] || '';
+      var t = (CFG.teams || {})[slug];
+      host.textContent = '';
+      window.scrollTo(0, 0);
+      if (!t) { problem(host, 'We could not find that team. Open a division and choose the team from the standings.'); return; }
+
+      var back = el('p', { class: 'crumbs' }, el('a', { href: 'team.html#' + slug }, 'Back to ' + t.name));
+      host.append(back, el('p', { class: 'empty', text: 'Loading game…' }));
+
+      loadGames(slug).then(function (res) {
+        var g = res.grouped, list = g.games;
+        var at = -1;
+        list.forEach(function (G, i) { if (G.slug === gslug) at = i; });
+        host.textContent = '';
+        host.append(back);
+        if (at < 0) {
+          host.append(el('p', { class: 'empty', text: 'We could not find that game. Go back to the team page and choose a game from the list.' }));
+          return;
+        }
+        var G = list[at];
+        document.title = G.label + ' | ' + t.name + ' | HPSA';
+        $('#game-title').textContent = G.label;
+        var bits = [t.name];
+        var extra = [G.opp ? 'vs ' + G.opp : '', G.date, G.result].filter(Boolean);
+        $('#game-sub').textContent = extra.length ? t.name + ' ' + extra.join(', ') : t.name;
+        showSampleNote(res.sample);
+
+        host.append(el('p', { class: 'section-hint', text: 'Select any stat to rank the players by it. Select it again to flip the order.' }));
+        var box = el('div', {});
+        host.append(box);
+        buildTable(box, { headers: g.headers, rows: G.rows }, { computedRank: false, search: false, footer: totalsRow(g.headers, G.rows, g.nameI) });
+
+        var pager = el('div', { class: 'pager' });
+        pager.append(at > 0 ? el('a', { href: gameHref(slug, list[at - 1]) }, 'Previous: ' + list[at - 1].label) : el('span', {}));
+        pager.append(at < list.length - 1 ? el('a', { href: gameHref(slug, list[at + 1]) }, 'Next: ' + list[at + 1].label) : el('span', {}));
+        host.append(pager);
+      }).catch(function () {
+        host.textContent = '';
+        host.append(back);
+        host.append(el('p', { class: 'empty', text: 'Game stats can’t be shown right now. Check that the combined games tab is published and its link is in config.js.' }));
+      });
+    }
+
+    window.addEventListener('hashchange', render);
+    render();
+  }
+
   /* ---------------- go ---------------- */
   buildHeader();
   buildFooter();
   initCountdown();
   initHomeCards();
   initDivisionPage();
+  initTeamPage();
+  initGamePage();
 
   // exposed for testing only
   window.__hpsa = { parseCSV: parseCSV, parseWhen: parseWhen, slugify: slugify, buildTable: buildTable };

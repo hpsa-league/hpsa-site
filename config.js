@@ -56,6 +56,24 @@ window.HPSA = {
     }
   },
 
+  /* ---- TEAM PAGES -------------------------------------------------------
+     A team listed here gets its own page (click the team name in the
+     standings): season totals plus a page for every game.
+     The key is the team name in lowercase with dashes instead of spaces.
+
+       seasonUrl : the published CSV of the team's season totals tab.
+       gamesUrl  : the published CSV of ONE combined tab with a row for every
+                   player in every game (see HOW-TO-UPDATE.md, section 4).
+                   Leave it empty until that tab exists.                      */
+  teams: {
+    "globo-gym-purple-cobras": {
+      name: "Globo Gym Purple Cobras",
+      division: "monday",
+      seasonUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR2Sgq4hJvvpr5x-F5wFaqJsy7XVhZTcWAZDi8UChvq8t_LBo19xdrOkrMODwp25JeEiBPop0pUVw8C/pub?gid=0&single=true&output=csv",
+      gamesUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR2Sgq4hJvvpr5x-F5wFaqJsy7XVhZTcWAZDi8UChvq8t_LBo19xdrOkrMODwp25JeEiBPop0pUVw8C/pub?gid=949594357&single=true&output=csv"
+    }
+  },
+
   /* In the leaders table, these stats rank lowest-first when sorted
      (so the first click on ERA shows the best, i.e. lowest, ERA).         */
   lowerIsBetter: ["ERA", "WHIP"],

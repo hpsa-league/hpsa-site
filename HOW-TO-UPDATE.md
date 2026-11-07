@@ -52,6 +52,22 @@ Open `config.js` and find `countdown`. Add, change or remove lines in the list:
 
 If a team name changes, rename its logo file to match, or add a line under `logos` in `config.js` that points the new name to the old file.
 
+## 4. Show game-by-game stats for a team
+
+A team with its own page (Globo Gym, to start) shows its season totals and a page for every game.
+
+1. In the workbook, make a new tab called **All Games** (click the + at the bottom left).
+2. Click cell **A1**. Then click in the formula bar at the top (not just the cell) and paste the formula from `all-games-formula.txt`. It stacks Game1 to Game17 into one list with a Game column.
+   - It assumes the tabs are named exactly `Game1`, `Game2` and so on, with the headings in row 1 and players in rows 2 to 20, columns A to P. If your tab names have a space (`Game 1`), change them to match.
+3. Publish that one tab: **File > Share > Publish to web**, pick **All Games**, choose **Comma-separated values (.csv)**, then **Publish**.
+4. Paste the link into `config.js` under `teams`, next to `gamesUrl`.
+
+Players with no stats in a game are left out of that game, and a game with no stats yet does not appear in the list. Each game page shows the team totals at the bottom, and AVG, OBP and SLG are worked out from the totals.
+
+**Optional extras:** if you add columns named `Opponent`, `Date` or `Result` to the combined tab, they show on the game list and the game page.
+
+**Adding a team:** copy the Globo Gym block under `teams` in `config.js`, change the name (the key is the name in lowercase with dashes), and add its two links. Its name in the standings then links to its page.
+
 ## Changing the menu or page text
 
 - **Menu names and links:** `config.js`, under `nav`.

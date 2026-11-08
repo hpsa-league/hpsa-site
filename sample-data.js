@@ -166,4 +166,22 @@
     window.HPSA_SAMPLE.tuesday.schedule = sched(["Sunny’s Gym", "Scared Hitless", "Athletic Knit Athletics", "Bulldogs"], 1, 6, 2);
     window.HPSA_SAMPLE.wednesday.schedule = sched(["Caciques", "Cardinal Marble", "Moose Knuckles", "nWo", "The Sailor Saints", "The Batstreet Boys", "South Park Cows", "Parkview Athletics"], 2, 7, 2);
   })();
+
+  // Sample playoff bracket (same columns as the league's playoffs tab, plus Round and the score columns).
+  window.HPSA_SAMPLE.playoffs = csv([
+    ["Date", "Time", "Diamond", "Division", "Home", "Away", "Round", "Home Score", "Away Score"],
+    ["Monday Aug 31", "7:00 PM", "Lam 2", "5A", "Globo Gym Purple Cobras", "Shift Disturbers", "A - Semi", "11", "8"],
+    ["Monday Aug 31", "9:00 PM", "Lam 2", "5A", "Vendetta", "Dodgers", "A - Semi", "16", "12"],
+    ["Monday Aug 31", "7:00 PM", "Lam 1", "5B", "5", "8", "B - Semi", "", ""],
+    ["Monday Aug 31", "9:00 PM", "Lam 1", "5B", "6", "7", "B - Semi", "", ""],
+    ["Tuesday Sep 1", "7:00 PM", "Hendon West", "3", "2", "3", "Semi", "", ""],
+    ["Tuesday Sep 1", "9:00 PM", "Hendon West", "3", "1", "4", "Semi", "", ""],
+    ["Wednesday Sep 2", "7:00 PM", "Lam 2", "4A", "2", "3", "A - Semi", "", ""],
+    ["Wednesday Sep 2", "9:00 PM", "Lam 2", "4A", "1", "4", "A - Semi", "", ""],
+    ["Tuesday Sep 8", "7 or 9", "Hendon West", "3", "1", "2", "Game 1 Finals", "", ""],
+    ["Tuesday Sep 8", "7 or 9", "Hendon West", "5A", "Vendetta", "Globo Gym Purple Cobras", "Game 1 Finals", "8", "18"],
+    ["Wednesday Sep 9", "7:00 PM", "Lam 1", "5B", "5", "6", "B Championship", "", ""],
+    ["Monday Sep 14", "7:00 PM", "Lam 2", "5A", "Globo Gym Purple Cobras", "Vendetta", "Game 2 A Finals", "", ""],
+    ["Tuesday Sept 15 or Wednesday Sept 16", "7 or 9", "TBD", "5A", "Vendetta", "Globo Gym Purple Cobras", "Game 3 if needed", "", ""]
+  ]);
 })();

@@ -161,6 +161,42 @@ Each can be turned on or off separately. With `date: false` a game shows just th
 
 *Older option:* a division can also have its own `scheduleUrl` in `config.js`, pointing at a tab with the columns Date, Home Team, Away Team, Home Score, Away Score, Status (optional: Time, Field, Week). It is only used when the league-wide `scheduleUrl` at the top is empty.
 
+## 7. Playoffs (bracket)
+
+The **Playoffs** page draws a bracket for each division from the **playoffs** tab in the league Master workbook. Change the tab and the bracket follows within a few minutes.
+
+**What the tab needs.** Row 1 holds headings; each game is one row:
+
+| Column | What goes in it |
+| --- | --- |
+| Date, Time, Diamond | Shown as typed ("Monday Aug 31", "7:00 PM", "Lam 2") |
+| Division | `5A`, `5B`, `3`, `4A`, `4B`. The number is the division (5 = Monday, 3 = Tuesday, 4 = Wednesday). The letter is the A or B bracket. A division with no letter (Tuesday) gets a single bracket. |
+| Home, Away | The team name, or a seed number (1 to 8) until the teams are known. A seed number shows as "Seed 5" in the semifinals and as "TBD" later on. |
+| Round | The words in this column decide where a game goes: **Semi** in the semifinals; **Game 1**, **Game 2**, **Game 3 if needed** in an A final; **Championship** in a single-game final. The heading can be blank or `Round`. |
+| Home Score, Away Score | **Add these two columns.** Leave them blank until the game is played. |
+
+Blank rows are ignored, so you can keep blank spacer rows between groups.
+
+**What the page does:**
+- Semifinals sit on the left and lead into the final on the right. On a phone they stack, one under the other.
+- The winner of each game is shown in bold with the bigger score.
+- For a best-of-three final, the page keeps the series count ("Globo Gym lead the series 1-0"). Once a team has won two games it shows the champion, and "Game 3 (if needed)" turns into "Not needed". For a single championship game, the winner is shown as champion.
+- Placeholders are fine. You can publish the empty bracket early and fill in team names and scores as you go.
+
+**To connect it:**
+1. In the Master workbook choose **File > Share > Publish to web**.
+2. Pick the **playoffs** tab (one tab), choose **CSV**, and click **Publish**. Copy the link.
+3. Paste it into `config.js` as `playoffsUrl` (near the top), and commit on GitHub.
+
+**When the teams are set:** type the team names into Home and Away for each semifinal row. Once the semifinals are played, type the finalists' names into the final rows (Game 1, Game 2, Game 3). The page does not move teams into the final by itself. The home team of each final game is whoever is in the Home column.
+
+**If something looks wrong**
+- *"The playoffs can't be shown right now":* the tab isn't published, or `playoffsUrl` is wrong or empty.
+- *A game is missing:* its Division is not in the form 5A, 5B, 3, 4A or 4B, or the Round column doesn't say Semi, Game or Championship.
+- *A game sits in the wrong place:* check the words in the Round column.
+- *No score shows:* both score cells need a number.
+- *A team shows without its logo:* the team name must match the spelling used elsewhere.
+
 ## Getting found on Google
 
 The site already has page titles, descriptions, a sitemap (`sitemap.xml`) and a `robots.txt`. Two jobs for you:

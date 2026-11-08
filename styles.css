@@ -247,3 +247,42 @@ table.data.pane-scroll { width: 100%; min-width: 0; }
 }
 
 .sched-week.is-flat { margin-top: 1.25rem; }
+
+
+/* ---------- Playoff brackets ---------- */
+.po-division + .po-division { margin-top: 3.25rem; }
+.po-bracket { margin-top: 1.5rem; }
+.po-title { font-size: 1.6rem; font-weight: 800; margin-bottom: .75rem; }
+.bk-grid { display: grid; grid-template-columns: minmax(0, 1fr) 2.75rem minmax(0, 1fr); align-items: stretch; max-width: 56rem; }
+.bk-heads { margin-bottom: .5rem; color: var(--muted); font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.bk-body.is-single, .bk-heads:has(+ .is-single) { grid-template-columns: minmax(0, 28rem); }
+.bk-col { display: flex; flex-direction: column; gap: .75rem; min-width: 0; }
+.bk-semis { justify-content: space-around; }
+.bk-final { justify-content: center; }
+.bk-links { position: relative; }
+.bk-links::before { content: ""; position: absolute; left: 0; right: 50%; top: 25%; bottom: 25%; border: 2px solid var(--line); border-left: 0; }
+.bk-links::after { content: ""; position: absolute; left: 50%; right: 0; top: 50%; border-top: 2px solid var(--line); }
+.po-card { background: var(--white); border: 1px solid var(--line); border-left: 6px solid var(--line); border-radius: 8px; padding: .6rem .85rem .7rem; }
+.po-card.is-played { border-left-color: var(--blue); }
+.po-card.is-optional { border-style: dashed; }
+.po-card.is-skipped { opacity: .55; }
+.po-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .1rem .75rem; margin-bottom: .45rem; font-size: .8rem; color: var(--muted); }
+.po-head strong { color: var(--navy); font-size: .88rem; }
+.po-team { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .2rem 0; min-width: 0; }
+.po-team .team-cell { min-width: 0; }
+.po-ph { color: var(--muted); font-style: italic; padding-left: .2rem; }
+.po-score { font-family: var(--display); font-size: 1.5rem; font-weight: 800; line-height: 1; min-width: 1.5rem; text-align: right; color: var(--muted); }
+.po-team.is-win { font-weight: 700; }
+.po-team.is-win .po-score { color: var(--navy); }
+.po-series { margin: 0; font-weight: 700; color: var(--navy); }
+.po-champ { display: flex; align-items: center; gap: .6rem; margin: .25rem 0 0; padding: .6rem .85rem; background: var(--navy); color: #fff; border-radius: 8px; }
+.po-champ span { font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--red-soft); }
+.po-champ strong { font-family: var(--display); font-size: 1.35rem; font-weight: 800; }
+@media (max-width: 700px) {
+  .bk-grid, .bk-body.is-single { grid-template-columns: minmax(0, 1fr); }
+  .bk-heads { display: none; }
+  .bk-links { display: none; }
+  .bk-col { margin-bottom: .75rem; }
+  .bk-semis::before { content: "Semifinals"; font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .bk-final::before { content: "Final"; font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+}

@@ -998,6 +998,182 @@
     });
   }
 
+
+  /* ---------------- playoffs ---------------- */
+  var PLACEHOLDER_RE = /^(\d+|tbd|tba|bye|winner.*|loser.*|)$/i;
+
+  function roundInfo(text) {
+    var t = String(text || '').toLowerCase();
+    if (/semi/.test(t)) return { kind: 'semi' };
+    if (/champ/.test(t)) return { kind: 'champ' };
+    var m = t.match(/game\s*(\d)/);
+    if (m || /final/.test(t)) return { kind: 'final', n: m ? +m[1] : 1, ifNeeded: /if\s*(needed|necessary)/.test(t) };
+    return { kind: 'other' };
+  }
+
+  // Reads the playoffs tab: Date, Time, Diamond, Division (5A, 5B, 3, 4A...), Home, Away, Round,
+  // Home Score, Away Score. The Round column may have no heading (it is then found by its contents).
+  function parsePlayoffs(table) {
+    var h = table.headers;
+    var c = {
+      date: findCol(h, /^date$/i), time: findCol(h, /^time$/i),
+      field: findCol(h, /^(diamond|field|location|park)$/i),
+      div: findCol(h, /^(division|bracket)$/i),
+      home: findCol(h, /^home(\s*team)?$/i), away: findCol(h, /^(away|visitor|visiting)(\s*team)?$/i),
+      round: findCol(h, /^(round|stage|game|series)$/i),
+      hs: findCol(h, /^home\s*score$/i), as: findCol(h, /^(away|visitor|visiting)\s*score$/i)
+    };
+    if (c.home < 0 || c.away < 0 || c.div < 0) return null;
+    if (c.round < 0) c.round = findCol(h, /^$/);
+    function get(r, i) { return i < 0 ? '' : (r[i] || ''); }
+    var groups = {}, order = [];
+    table.rows.forEach(function (r) {
+      var code = get(r, c.div).replace(/division/i, '').replace(/\s+/g, '');
+      var m = code.match(/^(\d+)([A-Za-z])?$/);
+      if (!m) return;
+      var key = divisionKey('Division ' + m[1]);
+      if (!key) return;
+      var letter = (m[2] || '').toUpperCase();
+      var gk = key + '|' + letter;
+      var G = groups[gk];
+      if (!G) { G = groups[gk] = { division: key, letter: letter, semis: [], finals: [], champs: [], other: [] }; order.push(G); }
+      var info = roundInfo(get(r, c.round));
+      var game = {
+        date: get(r, c.date), time: get(r, c.time), field: get(r, c.field),
+        home: get(r, c.home), away: get(r, c.away), roundText: get(r, c.round),
+        hs: get(r, c.hs), as: get(r, c.as), n: info.n || 0, ifNeeded: !!info.ifNeeded,
+        played: c.hs >= 0 && c.as >= 0 && isNum(get(r, c.hs)) && isNum(get(r, c.as))
+      };
+      (info.kind === 'semi' ? G.semis : info.kind === 'final' ? G.finals : info.kind === 'champ' ? G.champs : G.other).push(game);
+    });
+    var keys = Object.keys(CFG.divisions);
+    order.sort(function (a, b) {
+      return keys.indexOf(a.division) - keys.indexOf(b.division) || (a.letter < b.letter ? -1 : a.letter > b.letter ? 1 : 0);
+    });
+    order.forEach(function (G) { G.finals.sort(function (a, b) { return a.n - b.n; }); });
+    return order;
+  }
+
+  function loadPlayoffs() {
+    return loadTable(CFG.playoffsUrl || '', SAMPLE.playoffs).then(function (res) {
+      var g = parsePlayoffs(res.table);
+      if (!g) throw new Error('no playoff columns');
+      return { groups: g, sample: res.sample };
+    });
+  }
+
+  function winnerOf(g) {
+    if (!g.played) return '';
+    var a = parseFloat(g.hs), b = parseFloat(g.as);
+    return a > b ? g.home : b > a ? g.away : '';
+  }
+
+  function renderPlayoffs(host, groups) {
+    host.textContent = '';
+    var byDiv = {};
+    groups.forEach(function (G) { (byDiv[G.division] = byDiv[G.division] || []).push(G); });
+
+    function teamRow(name, score, win, seedLabel) {
+      var ph = PLACEHOLDER_RE.test(name);
+      var label = ph ? (/^\d+$/.test(name) && seedLabel ? 'Seed ' + name : /^(tbd|tba|)$/i.test(name) ? 'TBD' : /^\d+$/.test(name) ? 'TBD' : name) : name;
+      return el('div', { class: 'po-team' + (win ? ' is-win' : '') + (ph ? ' is-ph' : '') },
+        ph ? el('span', { class: 'po-ph', text: label }) : teamCell(name),
+        el('b', { class: 'po-score', text: score }));
+    }
+
+    function card(g, label, isSemi) {
+      var w = winnerOf(g);
+      var when = [g.date, g.time, g.field].filter(Boolean).join(' · ');
+      var c = el('div', { class: 'po-card' + (g.played ? ' is-played' : '') + (g.ifNeeded ? ' is-optional' : '') },
+        el('div', { class: 'po-head' }, el('strong', { text: label }), when ? el('span', { text: when }) : null),
+        teamRow(g.home, g.played ? g.hs : '', w && w === g.home, isSemi),
+        teamRow(g.away, g.played ? g.as : '', w && w === g.away, isSemi));
+      return c;
+    }
+
+    function seriesInfo(finals) {
+      var wins = {}, names = [];
+      finals.forEach(function (g) {
+        [g.home, g.away].forEach(function (n) { if (!PLACEHOLDER_RE.test(n) && names.indexOf(n) === -1) names.push(n); });
+        var w = winnerOf(g); if (w) wins[w] = (wins[w] || 0) + 1;
+      });
+      return { wins: wins, names: names };
+    }
+
+    function finalColumn(G) {
+      var col = el('div', { class: 'bk-col bk-final' });
+      var champion = '';
+      if (G.champs.length) {
+        G.champs.forEach(function (g) { col.append(card(g, 'Championship', false)); var w = winnerOf(g); if (w) champion = w; });
+      }
+      if (G.finals.length) {
+        var info = seriesInfo(G.finals), nm = info.names;
+        var need = G.finals.length >= 3 ? 2 : 1;
+        var lead = '';
+        if (nm.length === 2) {
+          var a = info.wins[nm[0]] || 0, b = info.wins[nm[1]] || 0;
+          if (a || b) {
+            if (a >= need || b >= need) { var top = a > b ? nm[0] : nm[1]; champion = top; lead = top + ' win the series ' + Math.max(a, b) + '-' + Math.min(a, b); }
+            else if (a === b) lead = 'Series tied ' + a + '-' + b;
+            else lead = (a > b ? nm[0] : nm[1]) + ' lead the series ' + Math.max(a, b) + '-' + Math.min(a, b);
+          }
+        }
+        if (lead) col.append(el('p', { class: 'po-series', text: lead }));
+        var decided = champion && G.finals.length >= 3;
+        G.finals.forEach(function (g) {
+          if (g.ifNeeded && decided && !g.played) {
+            col.append(el('div', { class: 'po-card is-skipped' }, el('div', { class: 'po-head' }, el('strong', { text: 'Game ' + g.n }), el('span', { text: 'Not needed' }))));
+          } else {
+            col.append(card(g, 'Game ' + g.n + (g.ifNeeded ? ' (if needed)' : ''), false));
+          }
+        });
+      }
+      if (champion) col.append(el('p', { class: 'po-champ' }, el('span', { text: 'Champion' }), el('strong', { text: champion })));
+      return col;
+    }
+
+    Object.keys(CFG.divisions).forEach(function (k) {
+      var list = byDiv[k];
+      if (!list) return;
+      var sec = el('section', { class: 'block po-division' }, el('h2', { class: 'section-title', text: CFG.divisions[k].name }));
+      list.forEach(function (G) {
+        var title = G.letter ? G.letter + ' Bracket' : 'Playoff bracket';
+        var wrap = el('div', { class: 'po-bracket' }, el('h3', { class: 'po-title', text: title }));
+        var hasFinal = G.finals.length || G.champs.length;
+        var heads = el('div', { class: 'bk-grid bk-heads' });
+        var body = el('div', { class: 'bk-grid bk-body' + (G.semis.length && hasFinal ? '' : ' is-single') });
+        if (G.semis.length) {
+          heads.append(el('span', { text: 'Semifinals' }), el('span'));
+          var sc = el('div', { class: 'bk-col bk-semis' });
+          G.semis.forEach(function (g, i) { sc.append(card(g, 'Semifinal ' + (i + 1), true)); });
+          body.append(sc);
+          if (hasFinal) body.append(el('div', { class: 'bk-links', 'aria-hidden': 'true' }));
+        }
+        if (hasFinal) { heads.append(el('span', { text: G.champs.length && !G.finals.length ? 'Championship' : 'Final' })); body.append(finalColumn(G)); }
+        if (G.other.length) {
+          var oc = el('div', { class: 'bk-col bk-other' });
+          G.other.forEach(function (g) { oc.append(card(g, g.roundText || 'Game', false)); });
+          body.append(oc);
+        }
+        wrap.append(heads, body);
+        sec.append(wrap);
+      });
+      host.append(sec);
+    });
+    if (!host.children.length) problem(host, 'No playoff games are on the sheet yet.');
+  }
+
+  function initPlayoffsPage() {
+    var host = $('#playoffs-view');
+    if (!host || document.body.getAttribute('data-page') !== 'playoffs') return;
+    loadPlayoffs().then(function (res) {
+      renderPlayoffs(host, res.groups);
+      showSampleNote(res.sample);
+    }).catch(function () {
+      problem(host, 'The playoffs can’t be shown right now. Check that the playoffs tab is published and its link is in config.js.');
+    });
+  }
+
   /* ---------------- go ---------------- */
   buildHeader();
   buildFooter();
@@ -1007,6 +1183,7 @@
   initTeamPage();
   initGamePage();
   initSchedulePage();
+  initPlayoffsPage();
 
   // exposed for testing only
   window.__hpsa = { parseCSV: parseCSV, parseWhen: parseWhen, slugify: slugify, buildTable: buildTable };

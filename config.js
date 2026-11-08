@@ -42,6 +42,12 @@ window.HPSA = {
        status : labels such as Forfeit or Rain Out                           */
   scheduleDisplay: { date: true, week: false, status: false },
 
+  /* ---- PLAYOFFS --------------------------------------------------------
+     Paste the published CSV link of the "playoffs" tab here
+     (see HOW-TO-UPDATE.md, section 7). While it is empty the page shows
+     a sample bracket.                                                     */
+  playoffsUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRdoYPZoNeRmA7IqLHM_ceBDQZc52lTnVDIyB3lqzlDGQmLkVQmph0TBMCxpEBTc1Rh4uW4_fhspgXo/pub?gid=473245405&single=true&output=csv",
+
   /* ---- DIVISIONS -------------------------------------------------------
      For each division, paste the "Publish to web" CSV link of the
      standings tab and the leaders tab (File > Share > Publish to web >

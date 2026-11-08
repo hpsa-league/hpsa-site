@@ -415,7 +415,15 @@
     }
 
     var smp = SAMPLE[key] || {};
+    var sched = $('#schedule-table');
+    var schedP = !sched ? Promise.resolve() : loadSchedule(key).then(function (res) {
+      if (res.sample) usedSample = true;
+      renderSchedule(sched, res.games, { teamFilter: true });
+    }).catch(function () {
+      problem(sched, 'The schedule can’t be shown right now. Check that the schedule tab is published and the link in config.js is correct.');
+    });
     Promise.all([
+      schedP,
       section('#standings-table', div.standingsUrl, smp.standings, { computedRank: false }, 'Standings'),
       section('#leaders-table', div.leadersUrl, smp.leaders, { computedRank: true, search: true, limit: CFG.leadersToShow || 10 }, 'Leaders')
     ]).then(function () {
@@ -651,6 +659,16 @@
       problem($('#team-season'), 'Season totals can’t be shown right now. Check that the sheet tab is still published and the link in config.js is correct.');
     });
 
+    var schedBox = $('#team-schedule');
+    var schedule = !schedBox ? Promise.resolve() : (div ? loadSchedule(t.division) : Promise.reject()).then(function (res) {
+      if (res.sample) used = true;
+      var mine = res.games.filter(function (g) { return slugify(g.home) === slug || slugify(g.away) === slug; });
+      if (!mine.length) { problem(schedBox, 'No games for this team are on the schedule yet.'); return; }
+      renderSchedule(schedBox, mine, { team: slug });
+    }).catch(function () {
+      problem(schedBox, 'The schedule can’t be shown right now. Check that the schedule tab is published and the link in config.js is correct.');
+    });
+
     var games = loadGames(slug).then(function (res) {
       if (res.sample) used = true;
       var box = $('#team-games');
@@ -669,7 +687,7 @@
       problem($('#team-games'), 'Game-by-game stats can’t be shown right now. Check that the combined games tab is published and its link is in config.js.');
     });
 
-    Promise.all([season, games]).then(function () { showSampleNote(used); });
+    Promise.all([season, schedule, games]).then(function () { showSampleNote(used); });
   }
 
   function initGamePage() {
@@ -725,6 +743,261 @@
     render();
   }
 
+
+  /* ---------------- schedule ---------------- */
+  var DAY_FMT = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+  function parseDay(str) {
+    str = String(str || '').trim();
+    if (!str) return NaN;
+    var m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (m) return new Date(+m[1], +m[2] - 1, +m[3], 12).getTime();
+    m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+    if (m) { var y = +m[3]; if (y < 100) y += 2000; return new Date(y, +m[1] - 1, +m[2], 12).getTime(); }
+    var t = Date.parse(/\d{4}/.test(str) ? str : str + ' ' + new Date().getFullYear());
+    return isNaN(t) ? NaN : new Date(new Date(t).getFullYear(), new Date(t).getMonth(), new Date(t).getDate(), 12).getTime();
+  }
+
+  // "Monday" or "Division 5" -> the division key in config.js (name or aliases, any capitals)
+  function divisionKey(text) {
+    text = String(text || '').trim().toLowerCase();
+    if (!text) return '';
+    var found = '';
+    Object.keys(CFG.divisions).forEach(function (k) {
+      var d = CFG.divisions[k];
+      [d.name].concat(d.aliases || []).forEach(function (n) { if (n && String(n).toLowerCase() === text) found = k; });
+    });
+    return found;
+  }
+
+  // Reads a schedule tab: Date, Home Team, Away Team, Home Score, Away Score, Status
+  // (optional: Time, Field, Week). Other columns are ignored.
+  function parseSchedule(table, division) {
+    var h = table.headers;
+    var c = {
+      date: findCol(h, /^date$/i),
+      home: findCol(h, /^home(\s*team)?$/i),
+      away: findCol(h, /^(away|visitor|visiting)(\s*team)?$/i),
+      hs: findCol(h, /^home\s*score$/i),
+      as: findCol(h, /^(away|visitor|visiting)\s*score$/i),
+      status: findCol(h, /^status$/i),
+      time: findCol(h, /^(time|start(\s*time)?)$/i),
+      field: findCol(h, /^(field|diamond|location|park)$/i),
+      week: findCol(h, /^(week|round)$/i),
+      day: findCol(h, /^day$/i),
+      div: findCol(h, /^division$/i)
+    };
+    if (c.home < 0 || c.away < 0) return null;
+    function get(r, i) { return i < 0 ? '' : (r[i] || ''); }
+    var games = [];
+    table.rows.forEach(function (r, idx) {
+      var home = get(r, c.home), away = get(r, c.away);
+      if (!home || !away) return;
+      var status = get(r, c.status);
+      games.push({
+        idx: idx, division: division || divisionKey(get(r, c.day)) || divisionKey(get(r, c.div)),
+        day: get(r, c.day), divText: get(r, c.div),
+        ts: parseDay(get(r, c.date)), rawDate: get(r, c.date),
+        time: get(r, c.time), field: get(r, c.field), week: get(r, c.week),
+        home: home, away: away,
+        hs: get(r, c.hs), as: get(r, c.as),
+        played: c.hs >= 0 && c.as >= 0 && isNum(get(r, c.hs)) && isNum(get(r, c.as)),
+        note: status && !/^(played( normally)?|final|completed?|scheduled|upcoming)$/i.test(status) ? status : ''
+      });
+    });
+    games.sort(function (a, b) {
+      var x = isNaN(a.ts) ? Infinity : a.ts, y = isNaN(b.ts) ? Infinity : b.ts;
+      return x === y ? a.idx - b.idx : x - y;
+    });
+    return games;
+  }
+
+  var leaguePromise = null;
+  function loadLeagueSchedule() {
+    if (!leaguePromise) {
+      leaguePromise = loadTable(CFG.scheduleUrl, '').then(function (res) {
+        var g = parseSchedule(res.table, '');
+        if (!g) throw new Error('no schedule columns');
+        return { games: g, sample: false };
+      });
+    }
+    return leaguePromise;
+  }
+
+  function loadSchedule(key) {
+    if (CFG.scheduleUrl) {
+      return loadLeagueSchedule().then(function (res) {
+        return { games: res.games.filter(function (g) { return g.division === key; }), sample: false };
+      });
+    }
+    var div = CFG.divisions[key];
+    return loadTable(div.scheduleUrl || '', (SAMPLE[key] || {}).schedule).then(function (res) {
+      var g = parseSchedule(res.table, key);
+      if (!g) throw new Error('no schedule columns');
+      return { games: g, sample: res.sample };
+    });
+  }
+
+  function dayText(g) { return isNaN(g.ts) ? g.rawDate : DAY_FMT.format(new Date(g.ts)); }
+  var WEEKDAY_FMT = new Intl.DateTimeFormat('en-US', { weekday: 'long' });
+  var LONGDAY_FMT = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  // "Monday May 4" (no year, no comma)
+  function longDay(g) {
+    return isNaN(g.ts) ? (g.day ? g.day + ' ' : '') + g.rawDate : LONGDAY_FMT.format(new Date(g.ts)).replace(',', '');
+  }
+  // What the heading of each game shows. config.js: scheduleDisplay { date, week, status } (false hides it)
+  function showing(what) { return (CFG.scheduleDisplay || {})[what] !== false; }
+  function headText(g) {
+    if (showing('date')) return longDay(g);
+    return g.day || (isNaN(g.ts) ? g.rawDate : WEEKDAY_FMT.format(new Date(g.ts)));
+  }
+
+  function chipGroup(items, current, onPick) {
+    var box = el('div', { class: 'chips' });
+    items.forEach(function (it) {
+      var b = el('button', { class: 'chip', type: 'button', 'aria-pressed': it.value === current ? 'true' : 'false', text: it.label });
+      b.addEventListener('click', function () {
+        onPick(it.value);
+        box.querySelectorAll('.chip').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      });
+      box.append(b);
+    });
+    return box;
+  }
+
+  // opts.team (slug): show one team's schedule.  opts.showDivision: label each game with its division.
+  // opts.divisions: [{value,label}] adds division buttons.  opts.teamFilter: adds a team drop-down.
+  function renderSchedule(host, games, opts) {
+    opts = opts || {};
+    var f = { status: 'all', division: 'all', team: 'all' };
+    host.textContent = '';
+    var tools = el('div', { class: 'sched-tools' });
+    var list = el('div', { class: 'sched-body' });
+
+    if (opts.divisions && opts.divisions.length > 1) {
+      tools.append(chipGroup([{ value: 'all', label: 'All divisions' }].concat(opts.divisions), 'all', function (v) { f.division = v; draw(); }));
+    }
+    tools.append(chipGroup([{ value: 'all', label: 'All games' }, { value: 'upcoming', label: 'Upcoming' }, { value: 'results', label: 'Results' }], 'all', function (v) { f.status = v; draw(); }));
+    if (opts.teamFilter) {
+      var names = {};
+      games.forEach(function (g) { names[g.home] = 1; names[g.away] = 1; });
+      var sel = el('select', { class: 'select', 'aria-label': 'Show one team' }, el('option', { value: 'all', text: 'All teams' }));
+      Object.keys(names).sort(function (a, b) { return a.localeCompare(b); }).forEach(function (n) { sel.append(el('option', { value: slugify(n), text: n })); });
+      sel.addEventListener('change', function () { f.team = sel.value; draw(); });
+      tools.append(sel);
+    }
+    host.append(tools, list);
+
+    function sideRow(name, score, win, isHome) {
+      return el('div', { class: 'sched-side' + (win ? ' is-win' : '') },
+        el('span', { class: 'sched-name' }, teamCell(name), isHome ? el('small', { class: 'sched-home', text: 'Home' }) : null),
+        el('span', { class: 'sched-score' }, score !== '' ? el('b', { text: score }) : null));
+    }
+
+    function whenBlock(g) {
+      var w = el('div', { class: 'sched-when' }, el('strong', { text: headText(g) }));
+      if (g.time) w.append(el('span', { text: g.time }));
+      if (g.field) w.append(el('span', { text: g.field }));
+      var dv = g.divText || (opts.showDivision && g.division && CFG.divisions[g.division] ? CFG.divisions[g.division].name : '');
+      if (dv) w.append(el('span', { class: 'sched-div', text: dv }));
+      return w;
+    }
+
+    function gameRow(g) {
+      var li = el('li', { class: 'sched-game' + (g.played ? ' is-played' : '') + (opts.team ? ' is-team' : '') });
+      li.append(whenBlock(g));
+      if (opts.team) {
+        var mine = slugify(g.home) === opts.team, opp = mine ? g.away : g.home;
+        var my = parseFloat(mine ? g.hs : g.as), their = parseFloat(mine ? g.as : g.hs);
+        li.append(el('div', { class: 'sched-opp' }, el('span', { class: 'sched-vs', text: mine ? 'vs' : '@' }), teamCell(opp)));
+        var end = el('div', { class: 'sched-end' });
+        if (g.played) {
+          var r = my > their ? 'W' : my < their ? 'L' : 'T';
+          end.append(el('span', { class: 'sched-result res-' + r.toLowerCase(), text: r + ' ' + my + '-' + their }));
+        }
+        if (g.note && showing('status')) end.append(el('span', { class: 'sched-badge', text: g.note }));
+        li.append(end);
+      } else {
+        var hw = g.played && parseFloat(g.hs) > parseFloat(g.as), aw = g.played && parseFloat(g.as) > parseFloat(g.hs);
+        li.append(el('div', { class: 'sched-match' }, sideRow(g.away, g.played ? g.as : '', aw, false), sideRow(g.home, g.played ? g.hs : '', hw, true)));
+        li.append(el('div', { class: 'sched-end' }, g.note && showing('status') ? el('span', { class: 'sched-badge', text: g.note }) : null));
+      }
+      return li;
+    }
+
+    function draw() {
+      var shown = games.filter(function (g) {
+        if (f.division !== 'all' && g.division !== f.division) return false;
+        if (f.status === 'upcoming' && g.played) return false;
+        if (f.status === 'results' && !g.played) return false;
+        var t = opts.team || (f.team !== 'all' ? f.team : '');
+        if (t && slugify(g.home) !== t && slugify(g.away) !== t) return false;
+        return true;
+      });
+      list.textContent = '';
+      if (!shown.length) {
+        list.append(el('p', { class: 'empty', text: f.status === 'upcoming' ? 'No upcoming games.' : f.status === 'results' ? 'No results yet.' : 'No games found.' }));
+        return;
+      }
+      var hasWeek = shown.some(function (g) { return g.week; }) && showing('week');
+      var flat = !hasWeek;
+      var groups = [], map = {};
+      shown.forEach(function (g) {
+        var key = flat ? '' : hasWeek ? (g.week || 'Other') : dayText(g);
+        var G = map[key];
+        if (!G) { G = map[key] = { label: key, games: [] }; groups.push(G); }
+        G.games.push(g);
+      });
+      groups.forEach(function (G) {
+        var ul = el('ul', { class: 'sched-list' });
+        G.games.forEach(function (g) { ul.append(gameRow(g)); });
+        var days = [];
+        G.games.forEach(function (g) { var d = dayText(g); if (d && days.indexOf(d) === -1) days.push(d); });
+        var small = hasWeek && showing('date') && days.length ? (days.length > 1 ? days[0] + ' to ' + days[days.length - 1] : days[0]) : '';
+        list.append(el('section', { class: 'sched-week' + (G.label ? '' : ' is-flat') }, G.label ? el('h3', {}, G.label, small ? el('small', { text: small }) : null) : null, ul));
+      });
+    }
+    draw();
+  }
+
+  /* ---------------- schedule pages ---------------- */
+  function initSchedulePage() {
+    var host = $('#schedule-view');
+    if (!host || document.body.getAttribute('data-page') !== 'schedule') return;
+    var keys = Object.keys(CFG.divisions);
+
+    var collected;
+    if (CFG.scheduleUrl) {
+      collected = loadLeagueSchedule().then(function (res) { return { all: res.games, sample: false }; });
+    } else {
+      collected = Promise.all(keys.map(function (k) {
+        return loadSchedule(k).then(function (res) { return { games: res.games, sample: res.sample }; })
+          .catch(function () { return { games: [], sample: false }; });
+      })).then(function (parts) {
+        var all = [], sample = false;
+        parts.forEach(function (p) { all = all.concat(p.games); if (p.sample) sample = true; });
+        return { all: all, sample: sample };
+      });
+    }
+
+    collected.then(function (res) {
+      var all = res.all;
+      if (!all.length) { problem(host, 'The schedule can’t be shown right now. Check that the schedule tab is published and its link is in config.js.'); return; }
+      all.sort(function (a, b) {
+        var x = isNaN(a.ts) ? Infinity : a.ts, y = isNaN(b.ts) ? Infinity : b.ts;
+        return x === y ? 0 : x - y;
+      });
+      var divs = [];
+      keys.forEach(function (k) {
+        if (all.some(function (g) { return g.division === k; })) divs.push({ value: k, label: CFG.divisions[k].name });
+      });
+      renderSchedule(host, all, { showDivision: true, divisions: divs, teamFilter: true });
+      showSampleNote(res.sample);
+    }).catch(function () {
+      problem(host, 'The schedule can’t be shown right now. Check that the schedule tab is published and its link is in config.js.');
+    });
+  }
+
   /* ---------------- go ---------------- */
   buildHeader();
   buildFooter();
@@ -733,6 +1006,7 @@
   initDivisionPage();
   initTeamPage();
   initGamePage();
+  initSchedulePage();
 
   // exposed for testing only
   window.__hpsa = { parseCSV: parseCSV, parseWhen: parseWhen, slugify: slugify, buildTable: buildTable };

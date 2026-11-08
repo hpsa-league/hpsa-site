@@ -29,25 +29,48 @@ window.HPSA = {
     afterMessage: "Final payment is now due. Pick your division below for the latest standings."
   },
 
+  /* ---- LEAGUE SCHEDULE -------------------------------------------------
+     Paste the published CSV link of the combined "Site Schedule" tab here
+     (see HOW-TO-UPDATE.md, section 6). One tab feeds the Schedule page,
+     every division page and every team page. While this is empty, the
+     per-division scheduleUrl links below (or sample data) are used.        */
+  scheduleUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRdoYPZoNeRmA7IqLHM_ceBDQZc52lTnVDIyB3lqzlDGQmLkVQmph0TBMCxpEBTc1Rh4uW4_fhspgXo/pub?gid=270377199&single=true&output=csv",
+
+  /* What the schedule shows. Set any of these to true to bring it back:
+       date   : the day and date of each game, e.g. "Monday May 4" (off: just "Monday")
+       week   : "Week 1" headings
+       status : labels such as Forfeit or Rain Out                           */
+  scheduleDisplay: { date: true, week: false, status: false },
+
   /* ---- DIVISIONS -------------------------------------------------------
      For each division, paste the "Publish to web" CSV link of the
      standings tab and the leaders tab (File > Share > Publish to web >
      choose the tab > Comma-separated values (.csv)).
      While a link is empty, the site shows SAMPLE data so you can see
-     the layout.                                                           */
+     the layout.
+
+     scheduleUrl is the published CSV of that division's schedule tab
+     (columns: Date, Home Team, Away Team, Home Score, Away Score, Status).
+     It feeds the Schedule page, the division page and every team page.    */
   divisions: {
     monday: {
       name: "Monday",
+      aliases: ["Division 5"],
+      scheduleUrl: "",
       standingsUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vST4tdwmHnIc2vsD2i8rw3ezjpMmjXbHuSQIzMPrZ9FNstdFRRxJ94D2b3r5RaoOufs1PiL9bZOqups/pub?gid=1161560956&single=true&output=csv",
       leadersUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vST4tdwmHnIc2vsD2i8rw3ezjpMmjXbHuSQIzMPrZ9FNstdFRRxJ94D2b3r5RaoOufs1PiL9bZOqups/pub?gid=2014465808&single=true&output=csv"
     },
     tuesday: {
       name: "Tuesday",
+      aliases: ["Division 3"],
+      scheduleUrl: "",
       standingsUrl: "",
       leadersUrl: ""
     },
     wednesday: {
       name: "Wednesday",
+      aliases: ["Division 4"],
+      scheduleUrl: "",
       standingsUrl: "",
       leadersUrl: ""
     }

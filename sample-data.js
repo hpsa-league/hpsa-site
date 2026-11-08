@@ -141,4 +141,29 @@
     ["Face Melters", "0", "0", "0", "0", "0", ".000", "0", "0", "0.00"],
     ["Dodgers", "1", "0", "1", "0", "0", ".000", "0", "0", "-1.00"]
   ]);
+
+  // Sample schedules (same columns as the league's schedule tab). Used only when a division has no scheduleUrl.
+  (function () {
+    var r = rng(5);
+    function sched(teams, dow, rounds, played) {
+      var n = teams.length, arr = teams.slice(), rows = [["Date", "Home Team", "Away Team", "Home Score", "Away Score", "Status", "", "Week"]];
+      for (var w = 0; w < rounds; w++) {
+        var d = new Date(2026, 4, 4 + dow + 7 * w);
+        var date = (d.getMonth() + 1) + "/" + d.getDate() + "/" + d.getFullYear();
+        var mon = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];
+        for (var i = 0; i < n / 2; i++) {
+          var a = arr[i], b = arr[n - 1 - i];
+          var home = (w + i) % 2 ? b : a, away = home === a ? b : a;
+          var done = w < played, hs = "", as = "";
+          if (done) { hs = String(2 + Math.floor(r() * 12)); as = String(2 + Math.floor(r() * 12)); if (hs === as) hs = String(+hs + 1); }
+          rows.push([date, home, away, hs, as, done ? "Played Normally" : "", mon + " " + d.getDate() + " - " + home + " vs " + away, "Week " + (w + 1)]);
+        }
+        arr.splice(1, 0, arr.pop());
+      }
+      return csv(rows);
+    }
+    window.HPSA_SAMPLE.monday.schedule = sched(["Vendetta", "Crew", "Shift Disturbers", "Globo Gym Purple Cobras", "Rosie's Degenerates", "Gugger", "Face Melters", "Dodgers"], 0, 7, 3);
+    window.HPSA_SAMPLE.tuesday.schedule = sched(["Sunny’s Gym", "Scared Hitless", "Athletic Knit Athletics", "Bulldogs"], 1, 6, 2);
+    window.HPSA_SAMPLE.wednesday.schedule = sched(["Caciques", "Cardinal Marble", "Moose Knuckles", "nWo", "The Sailor Saints", "The Batstreet Boys", "South Park Cows", "Parkview Athletics"], 2, 7, 2);
+  })();
 })();

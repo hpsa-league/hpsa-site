@@ -414,18 +414,33 @@
       });
     }
 
-    var smp = SAMPLE[key] || {};
     var sched = $('#schedule-table');
+    // No sheet links yet (Tuesday/Wednesday for now): show "coming soon" instead of sample data
+    var comingSoon = !div.standingsUrl && !div.leadersUrl;
+    if (comingSoon) {
+      ['#standings-table', '#leaders-table'].forEach(function (sel) {
+        var h = $(sel), sec = h && h.closest('section');
+        if (sec) sec.hidden = true;
+      });
+      var first = $('#standings-table'), anchor = first && first.closest('section');
+      if (anchor && anchor.parentNode) {
+        anchor.parentNode.insertBefore(el('div', { class: 'coming-soon' },
+          el('h2', { text: 'Standings and stats coming soon' }),
+          el('p', { text: 'Teams, standings, schedule and player stats for this division will be posted here once the season is set.' })), anchor);
+      }
+    }
     var schedP = !sched ? Promise.resolve() : loadSchedule(key).then(function (res) {
       if (res.sample) usedSample = true;
+      if (comingSoon && !res.games.length) { var s0 = sched.closest('section'); if (s0) s0.hidden = true; return; }
       renderSchedule(sched, res.games, { teamFilter: true });
     }).catch(function () {
+      if (comingSoon) { var s1 = sched.closest('section'); if (s1) s1.hidden = true; return; }
       problem(sched, 'The schedule can’t be shown right now. Check that the schedule tab is published and the link in config.js is correct.');
     });
     Promise.all([
       schedP,
-      section('#standings-table', div.standingsUrl, smp.standings, { computedRank: false }, 'Standings'),
-      section('#leaders-table', div.leadersUrl, smp.leaders, { computedRank: true, search: true, limit: CFG.leadersToShow || 10 }, 'Leaders')
+      comingSoon ? null : section('#standings-table', div.standingsUrl, '', { computedRank: false }, 'Standings'),
+      comingSoon ? null : section('#leaders-table', div.leadersUrl, '', { computedRank: true, search: true, limit: CFG.leadersToShow || 10 }, 'Leaders')
     ]).then(function () {
       var note = $('#sample-note');
       if (note && usedSample) note.hidden = false;
@@ -439,7 +454,7 @@
       var div = CFG.divisions[key];
       if (!div) return;
       var line = $('.div-first', card);
-      loadTable(div.standingsUrl, (SAMPLE[key] || {}).standings).then(function (res) {
+      loadTable(div.standingsUrl, '').then(function (res) {
         var t = res.table, ti = t.headers.findIndex(function (h) { return /^team$/i.test(h); });
         if (ti >= 0 && t.rows[0] && t.rows[0][ti]) line.textContent = 'In first place: ' + t.rows[0][ti];
       }).catch(function () { /* leave the line blank */ });
@@ -846,7 +861,7 @@
       });
     }
     var div = CFG.divisions[key];
-    return loadTable(div.scheduleUrl || '', (SAMPLE[key] || {}).schedule).then(function (res) {
+    return loadTable(div.scheduleUrl || '', '').then(function (res) {
       var g = parseSchedule(res.table, key);
       if (!g) throw new Error('no schedule columns');
       return { games: g, sample: res.sample };
@@ -1108,12 +1123,19 @@
     }
 
     function seriesInfo(finals) {
-      var wins = {}, names = [], seen = {};
+      var wins = {}, count = {}, label = {}, order = [];
       finals.forEach(function (g) {
-        [g.home, g.away].forEach(function (n) { var k = slugify(n); if (!PLACEHOLDER_RE.test(n) && !seen[k]) { seen[k] = 1; names.push(n); } });
         var w = winnerOf(g); if (w) wins[slugify(w)] = (wins[slugify(w)] || 0) + 1;
+        [g.home, g.away].forEach(function (n) {
+          if (PLACEHOLDER_RE.test(n)) return;
+          var k = slugify(n);
+          if (!(k in count)) { count[k] = 0; label[k] = n; order.push(k); }
+          count[k] += g.played ? 3 : 1;   // teams in played games count most
+        });
       });
-      return { wins: wins, names: names };
+      // the two teams in the series = the two most-used names
+      order.sort(function (a, b) { return count[b] - count[a]; });
+      return { wins: wins, names: order.slice(0, 2).map(function (k) { return label[k]; }) };
     }
 
     function finalColumn(G) {

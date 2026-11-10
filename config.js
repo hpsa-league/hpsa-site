@@ -48,6 +48,25 @@ window.HPSA = {
      a sample bracket.                                                     */
   playoffsUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRdoYPZoNeRmA7IqLHM_ceBDQZc52lTnVDIyB3lqzlDGQmLkVQmph0TBMCxpEBTc1Rh4uW4_fhspgXo/pub?gid=473245405&single=true&output=csv",
 
+  /* ---- CONTACT PAGE ----------------------------------------------------
+     formUrl : the link of a Google Form (see HOW-TO-UPDATE.md, section 8).
+               It is shown on the Contact page.
+     email   : optional. Shown as a link under the form. Use a league
+               address (not a personal one), because it is public.
+     intro   : optional sentence above the form.
+     While both are empty, the page says "coming soon".                    */
+  contact: {
+    formUrl: "https://docs.google.com/forms/d/e/1FAIpQLSdiMmIYXGIyiukfIhnJG7OhAqaAYfCUVB3Z7JRj8GQUYJlpxA/viewform",
+    email: "",
+    intro: "Questions about the league, scores, schedules or joining a team? Send us a message and we will get back to you."
+  },
+
+  /* ---- HISTORY PAGE ----------------------------------------------------
+     historyUrl : published CSV of the History tab (columns: Year, Division,
+                  Champion; optional Runner-up, Notes). Until it is set, the
+                  page shows the champions 2012 to 2025 built into the site. */
+  historyUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vTnZ-8nPF5-1kXSap1prBGp2YpKFoNqxl_99ClnpN5Kuy_YeLnhlfiMn_caPw9pL5FyAfVZlavu7-Zn/pub?gid=1364802130&single=true&output=csv",
+
   /* ---- DIVISIONS -------------------------------------------------------
      For each division, paste the "Publish to web" CSV link of the
      standings tab and the leaders tab (File > Share > Publish to web >

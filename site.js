@@ -443,6 +443,14 @@
         var t = res.table, ti = t.headers.findIndex(function (h) { return /^team$/i.test(h); });
         if (ti >= 0 && t.rows[0] && t.rows[0][ti]) line.textContent = 'In first place: ' + t.rows[0][ti];
       }).catch(function () { /* leave the line blank */ });
+      var nextLine = $('.div-next', card);
+      if (nextLine) loadSchedule(key).then(function (res) {
+        var today = new Date(); today.setHours(0, 0, 0, 0);
+        var next = res.games.filter(function (g) { return !g.played && !isNaN(g.ts) && g.ts >= today.getTime(); });
+        if (!next.length) return;
+        var same = next.filter(function (g) { return g.ts === next[0].ts; }).length;
+        nextLine.textContent = 'Next games: ' + longDay(next[0]) + ' (' + same + (same === 1 ? ' game)' : ' games)');
+      }).catch(function () { /* leave the line blank */ });
     });
   }
 
@@ -637,6 +645,12 @@
   function showSampleNote(used) { var n = $('#sample-note'); if (n && used) n.hidden = false; }
   function problem(host, text) { host.textContent = ''; host.append(el('p', { class: 'empty', text: text })); }
 
+  function setMeta(desc) {
+    var m = document.querySelector('meta[name="description"]');
+    if (!m) { m = document.createElement('meta'); m.setAttribute('name', 'description'); document.head.append(m); }
+    m.setAttribute('content', desc);
+  }
+
   function initTeamPage() {
     var host = $('#team-view');
     if (!host || document.body.getAttribute('data-page') !== 'team') return;
@@ -646,6 +660,7 @@
 
     var div = CFG.divisions[t.division], smp = (SAMPLE.teams || {})[slug] || {};
     document.title = t.name + ' | HPSA';
+    setMeta(t.name + ' softball team in the HPSA league at Hendon Park, Toronto and Scarborough: schedule, scores, season stats and game-by-game player stats.');
     $('#team-name').textContent = t.name;
     $('#team-logo').append(teamLogo(t.name));
     if (div) $('#team-sub').append(el('a', { href: t.division + '.html' }, div.name));
@@ -870,12 +885,13 @@
   function renderSchedule(host, games, opts) {
     opts = opts || {};
     var f = { status: 'all', division: 'all', team: 'all' };
+    if (opts.initialDivision && (opts.divisions || []).some(function (d) { return d.value === opts.initialDivision; })) f.division = opts.initialDivision;
     host.textContent = '';
     var tools = el('div', { class: 'sched-tools' });
     var list = el('div', { class: 'sched-body' });
 
     if (opts.divisions && opts.divisions.length > 1) {
-      tools.append(chipGroup([{ value: 'all', label: 'All divisions' }].concat(opts.divisions), 'all', function (v) { f.division = v; draw(); }));
+      tools.append(chipGroup([{ value: 'all', label: 'All divisions' }].concat(opts.divisions), f.division, function (v) { f.division = v; draw(); }));
     }
     tools.append(chipGroup([{ value: 'all', label: 'All games' }, { value: 'upcoming', label: 'Upcoming' }, { value: 'results', label: 'Results' }], 'all', function (v) { f.status = v; draw(); }));
     if (opts.teamFilter) {
@@ -991,7 +1007,7 @@
       keys.forEach(function (k) {
         if (all.some(function (g) { return g.division === k; })) divs.push({ value: k, label: CFG.divisions[k].name });
       });
-      renderSchedule(host, all, { showDivision: true, divisions: divs, teamFilter: true });
+      renderSchedule(host, all, { showDivision: true, divisions: divs, teamFilter: true, initialDivision: decodeURIComponent((location.hash || '').replace(/^#/, '')).toLowerCase() });
       showSampleNote(res.sample);
     }).catch(function () {
       problem(host, 'The schedule can’t be shown right now. Check that the schedule tab is published and its link is in config.js.');
@@ -1092,10 +1108,10 @@
     }
 
     function seriesInfo(finals) {
-      var wins = {}, names = [];
+      var wins = {}, names = [], seen = {};
       finals.forEach(function (g) {
-        [g.home, g.away].forEach(function (n) { if (!PLACEHOLDER_RE.test(n) && names.indexOf(n) === -1) names.push(n); });
-        var w = winnerOf(g); if (w) wins[w] = (wins[w] || 0) + 1;
+        [g.home, g.away].forEach(function (n) { var k = slugify(n); if (!PLACEHOLDER_RE.test(n) && !seen[k]) { seen[k] = 1; names.push(n); } });
+        var w = winnerOf(g); if (w) wins[slugify(w)] = (wins[slugify(w)] || 0) + 1;
       });
       return { wins: wins, names: names };
     }
@@ -1111,7 +1127,7 @@
         var need = G.finals.length >= 3 ? 2 : 1;
         var lead = '';
         if (nm.length === 2) {
-          var a = info.wins[nm[0]] || 0, b = info.wins[nm[1]] || 0;
+          var a = info.wins[slugify(nm[0])] || 0, b = info.wins[slugify(nm[1])] || 0;
           if (a || b) {
             if (a >= need || b >= need) { var top = a > b ? nm[0] : nm[1]; champion = top; lead = top + ' win the series ' + Math.max(a, b) + '-' + Math.min(a, b); }
             else if (a === b) lead = 'Series tied ' + a + '-' + b;
@@ -1174,6 +1190,101 @@
     });
   }
 
+
+  /* ---------------- contact page ---------------- */
+  function initContactPage() {
+    var host = $('#contact-view');
+    if (!host || document.body.getAttribute('data-page') !== 'contact') return;
+    var C = CFG.contact || {};
+    if (!C.formUrl && !C.email) return;            // nothing set up yet: keep the "coming soon" note
+    var soon = $('#contact-soon'); if (soon) soon.hidden = true;
+    host.textContent = '';
+    if (C.intro) host.append(el('p', { class: 'contact-intro', text: C.intro }));
+    if (C.email) {
+      host.append(el('p', { class: 'contact-email' }, 'Prefer email? Write to ', el('a', { href: 'mailto:' + C.email, text: C.email }), '.'));
+    }
+    if (C.formUrl) {
+      var u = C.formUrl;
+      if (!/embedded=true/.test(u)) u += (u.indexOf('?') > -1 ? '&' : '?') + 'embedded=true';
+      host.append(
+        el('iframe', { class: 'contact-form', src: u, title: 'Contact form', loading: 'lazy' }, 'Loading form…'),
+        el('p', { class: 'section-hint' }, 'Form not showing? ', el('a', { href: C.formUrl.replace(/[?&]embedded=true/, ''), target: '_blank', rel: 'noopener', text: 'Open it in a new tab' }), '.'));
+    }
+  }
+
+  /* ---------------- history page: champions by year ---------------- */
+  function initHistoryPage() {
+    var host = $('#history-champions');
+    if (!host || document.body.getAttribute('data-page') !== 'history') return;
+    loadTable(CFG.historyUrl || '', SAMPLE.history).then(function (res) {
+      var t = res.table, h = t.headers;
+      var yi = findCol(h, /^year$/i), di = findCol(h, /^(division|league)$/i), ci = findCol(h, /^champions?$/i),
+          ri = findCol(h, /^runners?[\s-]*up$/i), ni = findCol(h, /^notes?$/i);
+      if (yi < 0 || ci < 0) throw new Error('no champion columns');
+      // Player names: one cell of names separated by commas, columns Player 1, Player 2 ..., or one player per row.
+      var pcols = [];
+      h.forEach(function (x, i) { if (/^(players?|roster)(\s*\d+)?$/i.test(x.trim())) pcols.push(i); });
+      function namesOf(r) {
+        var out = [];
+        pcols.forEach(function (i) { String(r[i] || '').split(/[,;\n]+/).forEach(function (n) { n = n.trim(); if (n) out.push(n); }); });
+        return out;
+      }
+      var years = {}, order = [], byKey = {}, last = null;
+      t.rows.forEach(function (r) {
+        var y = (r[yi] || '').trim(), champ = (r[ci] || '').trim(), names = namesOf(r);
+        if (!y && !champ) {                       // a continuation row: more players for the team above
+          if (last) names.forEach(function (n) { if (last.players.indexOf(n) === -1) last.players.push(n); });
+          return;
+        }
+        if (!y || !champ) return;
+        var dv = di >= 0 ? (r[di] || '').trim() : '', key = (y + '|' + dv + '|' + champ).toLowerCase();
+        var item = byKey[key];
+        if (!item) {
+          item = byKey[key] = { div: dv, champ: champ, runner: ri >= 0 ? (r[ri] || '') : '', note: ni >= 0 ? (r[ni] || '') : '', players: [] };
+          if (!years[y]) { years[y] = []; order.push(y); }
+          years[y].push(item);
+        }
+        names.forEach(function (n) { if (item.players.indexOf(n) === -1) item.players.push(n); });
+        last = item;
+      });
+      order.sort(function (a, b) { return (parseInt(b, 10) || 0) - (parseInt(a, 10) || 0); });
+      if (!order.length) { problem(host, 'No champions have been added yet.'); return; }
+      host.textContent = '';
+      var box = el('input', { class: 'hist-search', type: 'search', placeholder: 'Find a team, a player or a year', 'aria-label': 'Find a team, a player or a year' });
+      var none = el('p', { class: 'empty', hidden: true, text: 'No champions match that search.' });
+      var list = el('div', { class: 'hist-years' });
+      var blocks = [];
+      order.forEach(function (y, i) {
+        var d = el('details', { class: 'hist-year' }, el('summary', {}, el('span', { text: y }), ' Champions'));
+        if (i === 0) d.open = true;
+        var ul = el('ul', { class: 'hist-list' });
+        var rows = years[y].map(function (x) {
+          var li = el('li', {}, el('span', { class: 'hist-div', text: x.div }), el('strong', { class: 'hist-team', text: x.champ }));
+          if (x.runner) li.append(el('span', { class: 'hist-note', text: 'Runner-up: ' + x.runner }));
+          if (x.note) li.append(el('span', { class: 'hist-note', text: x.note }));
+          if (x.players.length) li.append(el('span', { class: 'hist-players', text: x.players.join(', ') }));
+          ul.append(li);
+          return { li: li, text: (y + ' ' + x.div + ' ' + x.champ + ' ' + x.runner + ' ' + x.players.join(' ')).toLowerCase() };
+        });
+        d.append(ul); list.append(d);
+        blocks.push({ d: d, rows: rows, first: i === 0 });
+      });
+      box.addEventListener('input', function () {
+        var q = box.value.trim().toLowerCase(), shown = 0;
+        blocks.forEach(function (b) {
+          var n = 0;
+          b.rows.forEach(function (r) { var ok = !q || r.text.indexOf(q) > -1; r.li.hidden = !ok; if (ok) n++; });
+          b.d.hidden = n === 0; shown += n;
+          if (q) b.d.open = n > 0; else b.d.open = b.first;
+        });
+        none.hidden = shown > 0;
+      });
+      host.append(box, list, none);
+    }).catch(function () {
+      problem(host, 'The list of champions can’t be shown right now. Check that the History tab is published and its link is in config.js.');
+    });
+  }
+
   /* ---------------- go ---------------- */
   buildHeader();
   buildFooter();
@@ -1184,6 +1295,8 @@
   initGamePage();
   initSchedulePage();
   initPlayoffsPage();
+  initContactPage();
+  initHistoryPage();
 
   // exposed for testing only
   window.__hpsa = { parseCSV: parseCSV, parseWhen: parseWhen, slugify: slugify, buildTable: buildTable };

@@ -286,3 +286,50 @@ table.data.pane-scroll { width: 100%; min-width: 0; }
   .bk-semis::before { content: "Semifinals"; font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   .bk-final::before { content: "Final"; font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 }
+
+
+/* ---------- Home cards: schedule link ---------- */
+.div-card { position: relative; }
+.div-day { text-decoration: none; }
+.div-day::after { content: ""; position: absolute; inset: 0; }
+.div-first { margin-bottom: .2rem; }
+.div-next { min-height: 1.3em; margin: 0 0 1rem; font-weight: 600; color: var(--muted); }
+.div-links { display: flex; flex-wrap: wrap; gap: .4rem 1.4rem; margin-top: auto; }
+.div-links .div-go { position: relative; z-index: 1; margin-top: 0; }
+
+/* ---------- Contact ---------- */
+.contact-intro { max-width: 40rem; margin: 0 0 1rem; font-size: 1.1rem; }
+.contact-email { margin: 0 0 1.25rem; }
+.contact-form { display: block; width: 100%; max-width: 40rem; height: 1150px; border: 1px solid var(--line); border-radius: 8px; background: var(--white); }
+@media (max-width: 600px) { .contact-form { height: 1350px; } }
+
+/* ---------- History ---------- */
+.prose { max-width: 44rem; }
+.prose p { margin: 0 0 1rem; line-height: 1.65; }
+.hist-growth { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; max-width: 36rem; }
+.hist-growth li { display: flex; gap: 1.1rem; align-items: baseline; padding: .6rem .9rem; background: var(--white); border: 1px solid var(--line); border-left: 6px solid var(--blue); border-radius: 8px; }
+.hist-growth strong { min-width: 4rem; font-family: var(--display); font-size: 1.4rem; font-weight: 800; color: var(--navy); }
+.hist-search { font: inherit; width: 100%; max-width: 22rem; padding: .6rem .85rem; border: 2px solid var(--line); border-radius: 6px; margin-bottom: 1rem; }
+.hist-search:focus { border-color: var(--blue); outline: none; }
+.hist-years { display: grid; gap: .6rem; max-width: 44rem; }
+.hist-year { background: var(--white); border: 1px solid var(--line); border-left: 6px solid var(--blue); border-radius: 8px; }
+.hist-year summary { cursor: pointer; padding: .8rem 1rem; font-weight: 700; color: var(--navy); list-style-position: inside; }
+.hist-year summary span { font-family: var(--display); font-size: 1.5rem; font-weight: 800; }
+.hist-list { list-style: none; margin: 0; padding: 0 1rem .8rem; display: grid; gap: .35rem; }
+.hist-list li { display: grid; grid-template-columns: 9rem 1fr; gap: .1rem 1rem; padding: .35rem 0; border-top: 1px solid var(--line); }
+.hist-div { color: var(--muted); font-weight: 600; }
+.hist-note { grid-column: 2; font-size: .9rem; color: var(--muted); }
+@media (max-width: 520px) { .hist-list li { grid-template-columns: 1fr; } .hist-note { grid-column: 1; } }
+.section-title + .prose, .section-title + .hist-growth { margin-top: .9rem; }
+.hist-players { grid-column: 2; font-size: .9rem; line-height: 1.5; color: var(--muted); }
+@media (max-width: 520px) { .hist-players { grid-column: 1; } }
+
+/* contact people */
+.contact-people .people{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:14px}
+.contact-people .person{background:#fff;border:1px solid #d9e2ef;border-left:4px solid #134A8E;border-radius:8px;padding:14px 16px}
+.contact-people .person h3{margin:0 0 6px;font-size:1.1rem}
+.contact-people .person h3 span{font-weight:400;color:#555;font-size:.95rem}
+.contact-people .person p{margin:0;line-height:1.7}
+
+/* under construction banner */
+.construction{background:#fff4d6;border-bottom:2px solid #e8b923;color:#5a4300;padding:.7rem 0;text-align:center;font-size:.95rem}

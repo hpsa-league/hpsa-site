@@ -188,6 +188,8 @@ Blank rows are ignored, so you can keep blank spacer rows between groups.
 2. Pick the **playoffs** tab (one tab), choose **CSV**, and click **Publish**. Copy the link.
 3. Paste it into `config.js` as `playoffsUrl` (near the top), and commit on GitHub.
 
+**Who is leading a series.** For a best-of-three final, the page counts each team's wins across Game 1, Game 2 and Game 3 and shows it above the games ("Vendetta lead the series 1-0", "Series tied 1-1", then "Globo Gym win the series 2-0" and the champion). It works as soon as the **team names** are in the final rows and the scores are entered. Capital letters don't matter, but the spelling must match from game to game. If a final row still has a seed number (1, 2) instead of a team name, there is no series count yet.
+
 **When the teams are set:** type the team names into Home and Away for each semifinal row. Once the semifinals are played, type the finalists' names into the final rows (Game 1, Game 2, Game 3). The page does not move teams into the final by itself. The home team of each final game is whoever is in the Home column.
 
 **If something looks wrong**
@@ -197,12 +199,51 @@ Blank rows are ignored, so you can keep blank spacer rows between groups.
 - *No score shows:* both score cells need a number.
 - *A team shows without its logo:* the team name must match the spelling used elsewhere.
 
+## 8. The Contact page (a form so people can reach the league)
+
+The Contact page can show a Google Form, so a message goes straight to you without anyone's email address being posted on the website.
+
+**Make the form:**
+1. Go to forms.google.com and start a blank form called "Contact HPSA".
+2. Add questions, for example: Name (short answer), Email (short answer), Team (short answer, optional), Message (paragraph). Make Email and Message required.
+3. On the **Responses** tab, click the Sheets icon to send answers to a Google Sheet, and open the three dots and choose **Get email notifications for new responses** so you are told when someone writes.
+4. Click **Send**, choose the **link** tab, and copy the link.
+5. Open `config.js`, find `contact`, and paste the link as `formUrl`. Commit on GitHub.
+
+The form then appears on the Contact page. If you also want an email address shown, put it in `email` (use a league address, because it becomes public). Leave `email` empty to show no address. The sentence above the form is `intro` in the same block. While both `formUrl` and `email` are empty the page says "coming soon".
+
+*Tip:* more than one person can get the notifications. In the form's linked response sheet use **Tools > Notification settings**, or share the form with other admins and each can turn on notifications.
+
+## 9. HPSA History (updated every year)
+
+The History page has three parts:
+1. **Our story** and **League growth**: plain text in `history.html`. To change it, open that file on GitHub, edit the words between the `<p>` and `</p>` tags (or the lines in the growth list), and commit.
+2. **Past champions**: a list by year, newest first, with a search box. The latest year starts open.
+
+**Where the champions come from.** Until you set up a sheet, the page shows the champions for 2012 to 2025 that are built into the site. To update it every year, move the list into Google Sheets once:
+1. Make a new Google Sheet with a tab called **History**. Choose **File > Import**, upload `data/history-champions.csv` from the site files, and choose **Replace current sheet**. The columns are `Year, Division, Champion, Runner-up, Notes, Players`. Runner-up, Notes and Players are optional and can stay empty.
+2. Publish the tab: **File > Share > Publish to web**, pick **History**, choose **CSV**, **Publish**, and copy the link.
+3. Paste it into `config.js` as `historyUrl`. Commit on GitHub.
+
+**Player names under each champion team.** Add the players in any of these ways (the page understands all three):
+- **One cell:** a column headed `Players`, with the names separated by commas ("David Woodward, Michael Prior, Andrew Meredith").
+- **Several columns:** columns headed `Player 1`, `Player 2`, `Player 3` and so on, one name per cell.
+- **One row per player:** repeat the Year, Division and Champion on each row and put one name in `Players`. Or leave Year, Division and Champion blank on the rows under the team's first row.
+
+The names show in small grey text under the team, and the search box finds a player by name. Teams with no names listed simply show the team name.
+
+**Each year:** add one row per division to the sheet, for example `2026`, `Monday`, `Globo Gym Purple Cobras`. The page picks it up within a few minutes, and 2026 appears at the top. Write the division as you like ("Monday", "Division 5", "Tuesday A").
+
+**Please check:** the champions list was copied from the old hpsa.ca page, so look it over for typos. A few things to confirm: there is no 2020 section on the old page; the 2021 Division 5 champion was missing; and "Globo Gym Purple Cobras" (2022) was spelled "Global Gym" on the old page.
+
 ## Getting found on Google
 
-The site already has page titles, descriptions, a sitemap (`sitemap.xml`) and a `robots.txt`. Two jobs for you:
+The site already has page titles, descriptions, a sitemap (`sitemap.xml`) and a `robots.txt`. Every page opens with a sentence that names softball, Hendon Park, Toronto and Scarborough, and the home page has an "About HPSA" paragraph and hidden league details for search engines. When you write new text for a page, use plain words people would search for (softball, the division night, Toronto, Scarborough). Two jobs for you:
 
 1. **Register with Google Search Console (free):** go to search.google.com/search-console, add the site's address, and verify it. Then open **Sitemaps** and enter `sitemap.xml`. This tells Google the site exists.
 2. **When hpsa.ca points to this site:** the address `https://hpsa-league.github.io/hpsa-site/` appears in every page's `<link rel="canonical">`, in `sitemap.xml`, `robots.txt` and the structured data on `index.html`. Replace it with `https://hpsa.ca/` in those files.
+
+A note on team pages: a team's page address ends in `#team-name`, and Google treats everything after the `#` as the same page, so individual team pages will not appear separately in search. The division pages, schedule, playoffs and history pages will.
 
 Other free things that help: make sure the league has a Google Business Profile and that the address of Hendon Park is on it, ask local groups to link to the site, and keep the standings and news fresh.
 

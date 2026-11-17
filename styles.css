@@ -183,9 +183,11 @@ table.data.pane-scroll { width: 100%; min-width: 0; }
 .data tfoot td { background: var(--tint); font-weight: 700; border-top: 2px solid var(--navy); border-bottom: 0; }
 
 /* ---------- Footer ---------- */
-.site-footer { background: var(--navy); color: #C9D6EC; padding: 2rem 0; font-size: .95rem; }
+.site-footer { background: var(--banner); color: #C9D6EC; padding: 2rem 0; font-size: .95rem; }
 .site-footer a { color: #fff; }
-.site-footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .75rem 2rem; }
+.site-footer .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1.5rem; }
+.site-footer .foot-logo img { display: block; width: 72px; height: 72px; }
+.site-footer .foot-text { flex: 1; }
 .site-footer p { margin: 0; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }

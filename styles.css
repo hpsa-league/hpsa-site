@@ -343,3 +343,12 @@ table.data.pane-scroll { width: 100%; min-width: 0; }
 .site-header { border-top: 0; }
 .site-header .bar { justify-content: center; }
 .brand { display: none; }
+
+/* footer on phones: one line; the logo shrinks only as much as needed to fit */
+@media (max-width: 600px) {
+  .site-footer .wrap { padding-left: 0; padding-right: .6rem; flex-wrap: nowrap; gap: 0 .6rem; }
+  .site-footer .foot-logo { flex: 0 1 76px; min-width: 34px; }
+  .site-footer .foot-logo img { width: 100%; height: auto; }
+  .site-footer .foot-text { flex: 1 0 auto; font-size: min(.8rem, 3vw); white-space: nowrap; }
+  .site-footer .foot-link { flex: none; font-size: min(.8rem, 3vw); white-space: nowrap; }
+}

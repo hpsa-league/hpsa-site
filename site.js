@@ -143,7 +143,9 @@
       if (e.key === 'Escape') header.querySelectorAll('.has-sub.open').forEach(function (n) { n.classList.remove('open'); });
     });
 
-    host.replaceWith(el('div', {}, el('a', { class: 'skip', href: '#main' }, 'Skip to content'), header));
+    var banner = el('a', { class: 'top-banner', href: 'index.html', 'aria-label': CFG.fullName + ' home' },
+      el('img', { src: 'assets/banner.png', alt: CFG.fullName, width: '2000', height: '247' }));
+    host.replaceWith(el('div', {}, el('a', { class: 'skip', href: '#main' }, 'Skip to content'), banner, header));
   }
 
   function buildFooter() {

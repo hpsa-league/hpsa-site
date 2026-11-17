@@ -153,7 +153,7 @@
     if (!host) return;
     host.replaceWith(el('footer', { class: 'site-footer' }, el('div', { class: 'wrap' },
       el('a', { class: 'foot-logo', href: 'index.html', 'aria-label': CFG.fullName + ' home' },
-        el('img', { src: 'assets/footer-logo.png', alt: 'HPSA', width: '256', height: '256' })),
+        el('img', { src: 'assets/footer-logo.png', alt: 'HPSA', width: '400', height: '343' })),
       el('p', { class: 'foot-text' }, '© ' + new Date().getFullYear() + ' Hendon Park Softball Association'),
       el('p', { class: 'foot-link' }, el('a', { href: 'contact.html' }, 'Contact us'))
     )));

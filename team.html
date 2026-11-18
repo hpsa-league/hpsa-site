@@ -27,19 +27,26 @@
       <div class="wrap">
         <p class="notice" id="sample-note" hidden>You are looking at sample data. Add this team's sheet links in config.js to show real stats.</p>
         <div id="team-view">
-          <section class="block">
-            <h2 class="section-title">Season totals</h2>
-            <p class="section-hint">Select any stat to rank the players by it. Select it again to flip the order.</p>
-            <div id="team-season"><p class="empty">Loading season totals&hellip;</p></div>
-          </section>
+          <nav class="jump-nav" aria-label="Jump to a section">
+            <span>Jump to:</span>
+            <a href="#schedule">Schedule</a>
+            <a href="#season">Season totals</a>
+            <a href="#game-by-game">Game by game</a>
+          </nav>
 
-          <section class="block">
+          <section class="block" id="schedule">
             <h2 class="section-title">Schedule and scores</h2>
             <p class="section-hint">Every game on this team's schedule.</p>
             <div id="team-schedule"><p class="empty">Loading schedule&hellip;</p></div>
           </section>
 
-          <section class="block">
+          <section class="block" id="season">
+            <h2 class="section-title">Season totals</h2>
+            <p class="section-hint">Select any stat to rank the players by it. Select it again to flip the order.</p>
+            <div id="team-season"><p class="empty">Loading season totals&hellip;</p></div>
+          </section>
+
+          <section class="block" id="game-by-game">
             <h2 class="section-title">Game by game</h2>
             <p class="section-hint">Choose a game to see every player's stats from that night.</p>
             <div id="team-games"><p class="empty">Loading games&hellip;</p></div>

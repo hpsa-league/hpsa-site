@@ -1432,6 +1432,16 @@
   initContactPage();
   initHistoryPage();
 
+  // Team pages use the address after # for the team name, so the jump links scroll instead of changing the address.
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('.jump-nav a');
+    if (!a || document.body.getAttribute('data-page') !== 'team') return;
+    var target = document.getElementById((a.getAttribute('href') || '').replace(/^#/, ''));
+    if (!target) return;
+    e.preventDefault();
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
   // exposed for testing only
   window.__hpsa = { parseCSV: parseCSV, parseWhen: parseWhen, slugify: slugify, buildTable: buildTable };
 })();

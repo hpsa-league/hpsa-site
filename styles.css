@@ -352,3 +352,23 @@ table.data.pane-scroll { width: 100%; min-width: 0; }
   .site-footer .foot-text { flex: 1 0 auto; font-size: min(.8rem, 3vw); white-space: nowrap; }
   .site-footer .foot-link { flex: none; font-size: min(.8rem, 3vw); white-space: nowrap; }
 }
+
+/* jump links on division pages */
+.jump-nav { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .6rem; margin: 0 0 1.25rem; }
+.jump-nav span { font-weight: 700; color: var(--navy); }
+.jump-nav a { font-weight: 600; padding: .4rem .95rem; border-radius: 999px; border: 2px solid var(--line); background: var(--white); color: var(--navy); text-decoration: none; }
+.jump-nav a:hover { border-color: var(--blue); }
+.block[id] { scroll-margin-top: 1rem; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* schedule pages (Earlier / Later) */
+.pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .5rem .75rem; margin: 1rem 0; }
+.pager .pager-label { display: flex; flex-direction: column; align-items: center; text-align: center; color: var(--navy); min-width: 10rem; }
+.pager .pager-label small { color: #555; }
+.pager .chip:disabled { opacity: .4; cursor: default; }
+.pager .chip-plain { border-style: dashed; }
+
+/* add to calendar */
+.cal-box { margin: 0 0 1rem; }
+.cal-box .section-hint { margin: .4rem 0 0; }

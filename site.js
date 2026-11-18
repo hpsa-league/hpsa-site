@@ -422,6 +422,7 @@
     // No sheet links yet (Tuesday/Wednesday for now): show "coming soon" instead of sample data
     var comingSoon = !div.standingsUrl && !div.leadersUrl;
     if (comingSoon) {
+      var jn = $('#jump-nav'); if (jn) jn.hidden = true;
       ['#standings-table', '#leaders-table'].forEach(function (sel) {
         var h = $(sel), sec = h && h.closest('section');
         if (sec) sec.hidden = true;
@@ -699,6 +700,11 @@
       var mine = res.games.filter(function (g) { return slugify(g.home) === slug || slugify(g.away) === slug; });
       if (!mine.length) { problem(schedBox, 'No games for this team are on the schedule yet.'); return; }
       renderSchedule(schedBox, mine, { team: slug });
+      var cal = el('div', { class: 'cal-box' },
+        el('button', { class: "btn-quiet cal-btn", type: 'button', text: 'Add to my calendar' }),
+        el('p', { class: 'section-hint', text: 'Downloads every game with its date, time and diamond. Open the file to add it to Google Calendar, Apple Calendar or Outlook. If the schedule changes, download it again.' }));
+      cal.querySelector('button').addEventListener('click', function () { downloadIcs(mine, slug, t.name); });
+      schedBox.parentNode.insertBefore(cal, schedBox);
     }).catch(function () {
       problem(schedBox, 'The schedule can’t be shown right now. Check that the schedule tab is published and the link in config.js is correct.');
     });
@@ -899,6 +905,65 @@
     return box;
   }
 
+  /* ---------------- calendar download (.ics) ---------------- */
+  function parseClock(str) {
+    var m = String(str || '').trim().match(/^(\d{1,2})(?::(\d{2}))?(?::\d{2})?\s*([ap])?\.?m?\.?$/i);
+    if (!m) return null;
+    var h = +m[1], min = +(m[2] || 0), ap = (m[3] || '').toLowerCase();
+    if (ap === 'p' && h < 12) h += 12;
+    if (ap === 'a' && h === 12) h = 0;
+    return h > 23 || min > 59 ? null : { h: h, m: min };
+  }
+  function icsText(t) { return String(t || '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n'); }
+  function icsFold(line) {
+    var out = [];
+    while (line.length > 73) { out.push(line.slice(0, 73)); line = ' ' + line.slice(73); }
+    out.push(line);
+    return out.join('\r\n');
+  }
+  function p2(n) { return (n < 10 ? '0' : '') + n; }
+  function buildIcs(games, teamSlug, teamName) {
+    var now = new Date();
+    var stamp = now.getUTCFullYear() + p2(now.getUTCMonth() + 1) + p2(now.getUTCDate()) + 'T' + p2(now.getUTCHours()) + p2(now.getUTCMinutes()) + p2(now.getUTCSeconds()) + 'Z';
+    var lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//HPSA//Schedule//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+      'X-WR-CALNAME:' + icsText(teamName + ' (HPSA)')];
+    var count = 0;
+    games.forEach(function (g, i) {
+      if (isNaN(g.ts)) return;
+      var d = new Date(g.ts), day = '' + d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate());
+      var mine = slugify(g.home) === teamSlug, opp = mine ? g.away : g.home;
+      var clock = parseClock(g.time), start, end;
+      if (clock) {
+        var s0 = new Date(d.getFullYear(), d.getMonth(), d.getDate(), clock.h, clock.m), e0 = new Date(s0.getTime() + 90 * 60000);
+        var f = function (x) { return '' + x.getFullYear() + p2(x.getMonth() + 1) + p2(x.getDate()) + 'T' + p2(x.getHours()) + p2(x.getMinutes()) + '00'; };
+        start = 'DTSTART:' + f(s0); end = 'DTEND:' + f(e0);
+      } else {
+        var nx = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+        start = 'DTSTART;VALUE=DATE:' + day; end = 'DTEND;VALUE=DATE:' + nx.getFullYear() + p2(nx.getMonth() + 1) + p2(nx.getDate());
+      }
+      var div = CFG.divisions[g.division];
+      var desc = (div ? div.name + ' division. ' : '') + (g.field ? 'Diamond: ' + g.field + '. ' : '') + 'Schedule and scores: ' + new URL('team.html#' + teamSlug, location.href).href;
+      lines.push('BEGIN:VEVENT', 'UID:' + teamSlug + '-' + day + '-' + i + '@hpsa.ca', 'DTSTAMP:' + stamp, start, end,
+        icsFold('SUMMARY:' + icsText(teamName + (mine ? ' vs ' : ' at ') + opp)),
+        icsFold('DESCRIPTION:' + icsText(desc)), 'END:VEVENT');
+      if (g.field) lines.splice(lines.length - 2, 0, icsFold('LOCATION:' + icsText(g.field)));
+      count++;
+    });
+    lines.push('END:VCALENDAR');
+    return count ? lines.join('\r\n') + '\r\n' : '';
+  }
+  function downloadIcs(games, teamSlug, teamName) {
+    var text = buildIcs(games, teamSlug, teamName);
+    if (!text) return false;
+    var blob = new Blob([text], { type: 'text/calendar;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = teamSlug + '-schedule.ics';
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+    return true;
+  }
+
   // opts.team (slug): show one team's schedule.  opts.showDivision: label each game with its division.
   // opts.divisions: [{value,label}] adds division buttons.  opts.teamFilter: adds a team drop-down.
   function renderSchedule(host, games, opts) {
@@ -974,6 +1039,48 @@
         list.append(el('p', { class: 'empty', text: f.status === 'upcoming' ? 'No upcoming games.' : f.status === 'results' ? 'No results yet.' : 'No games found.' }));
         return;
       }
+      // Pages: a few game nights (or weeks) at a time. config.js: schedulePageSize (0 = show everything)
+      var perPage = opts.team ? 0 : (CFG.schedulePageSize === undefined ? 4 : CFG.schedulePageSize);
+      var sig = [f.division, f.status, f.team].join('|');
+      if (sig !== f.sig) { f.sig = sig; f.page = null; f.all = false; }
+      var makePager = null;
+      var pbtn = function (text, cls, off, fn) {
+        var b = el('button', { class: cls, type: 'button', text: text });
+        if (off) b.disabled = true; else b.addEventListener('click', fn);
+        return b;
+      };
+      if (perPage > 0) {
+        var byWeek = shown.some(function (g) { return g.week; }) && showing('week');
+        var unit = function (g) { return byWeek ? (g.week || 'Other') : dayText(g); };
+        var units = [], pos = {};
+        shown.forEach(function (g) { var u = unit(g); if (!(u in pos)) { pos[u] = units.length; units.push(u); } });
+        var pageCount = Math.ceil(units.length / perPage);
+        if (pageCount > 1) {
+          if (f.all) {
+            makePager = function () {
+              return el('div', { class: 'pager' }, pbtn('Show a few game nights at a time', 'chip', false, function () { f.all = false; draw(); host.scrollIntoView({ block: 'start' }); }));
+            };
+          } else {
+            if (f.page == null) {
+              var open = shown.filter(function (g) { return !g.played; })[0];
+              f.page = open ? Math.floor(pos[unit(open)] / perPage) : pageCount - 1;
+            }
+            f.page = Math.max(0, Math.min(pageCount - 1, f.page));
+            var keep = units.slice(f.page * perPage, f.page * perPage + perPage);
+            shown = shown.filter(function (g) { return keep.indexOf(unit(g)) >= 0; });
+            var go = function (n) { f.page = n; draw(); host.scrollIntoView({ block: 'start' }); };
+            var cur = f.page;
+            makePager = function () {
+              return el('div', { class: 'pager' },
+                pbtn('‹ Earlier', 'chip', cur === 0, function () { go(cur - 1); }),
+                el('span', { class: 'pager-label' }, el('strong', { text: keep[0] + (keep.length > 1 ? ' to ' + keep[keep.length - 1] : '') }), el('small', { text: 'Page ' + (cur + 1) + ' of ' + pageCount })),
+                pbtn('Later ›', 'chip', cur === pageCount - 1, function () { go(cur + 1); }),
+                pbtn('Show all games', 'chip chip-plain', false, function () { f.all = true; draw(); }));
+            };
+          }
+        }
+      }
+      if (makePager) list.append(makePager());
       var hasWeek = shown.some(function (g) { return g.week; }) && showing('week');
       var flat = !hasWeek;
       var groups = [], map = {};
@@ -991,6 +1098,7 @@
         var small = hasWeek && showing('date') && days.length ? (days.length > 1 ? days[0] + ' to ' + days[days.length - 1] : days[0]) : '';
         list.append(el('section', { class: 'sched-week' + (G.label ? '' : ' is-flat') }, G.label ? el('h3', {}, G.label, small ? el('small', { text: small }) : null) : null, ul));
       });
+      if (makePager) list.append(makePager());
     }
     draw();
   }

@@ -42,6 +42,9 @@ window.HPSA = {
        status : labels such as Forfeit or Rain Out                           */
   scheduleDisplay: { date: true, week: false, status: false },
 
+  // How many game nights (or weeks) to show at a time on division and league schedules. 0 = show every game.
+  schedulePageSize: 4,
+
   /* ---- PLAYOFFS --------------------------------------------------------
      Paste the published CSV link of the "playoffs" tab here
      (see HOW-TO-UPDATE.md, section 7). While it is empty the page shows
@@ -122,6 +125,42 @@ window.HPSA = {
       division: "monday",
       seasonUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRok8fnPsReQCVvcvDoHyjTMHN8idZ2VnHasc8s_ilxbnnyogQ2HHPgleiKpnRzFYzjbl_o44ta32aw/pub?gid=0&single=true&output=csv",
       gamesUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRok8fnPsReQCVvcvDoHyjTMHN8idZ2VnHasc8s_ilxbnnyogQ2HHPgleiKpnRzFYzjbl_o44ta32aw/pub?gid=217381119&single=true&output=csv"
+    },
+    "dodgers": {
+      name: "Dodgers",
+      division: "monday",
+      seasonUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9GQqmqABE5e4xVWXueCN5Umzl49AEMqh_2gYr5mCrKBzEOEcoEj4_xltsZYUZrbkR4YxeF7BMqcmX/pub?gid=0&single=true&output=csv",
+      gamesUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vT9GQqmqABE5e4xVWXueCN5Umzl49AEMqh_2gYr5mCrKBzEOEcoEj4_xltsZYUZrbkR4YxeF7BMqcmX/pub?gid=217381119&single=true&output=csv"
+    },
+    "vendetta": {
+      name: "Vendetta",
+      division: "monday",
+      seasonUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwIGjtfGKsf5aXUDS1rb0v3xR7f9Ch8qR-mI3PNkRT4pt5D1A3-8NZkmHefHnMtOKFy1gQSNQagn81/pub?gid=0&single=true&output=csv",
+      gamesUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwIGjtfGKsf5aXUDS1rb0v3xR7f9Ch8qR-mI3PNkRT4pt5D1A3-8NZkmHefHnMtOKFy1gQSNQagn81/pub?gid=217381119&single=true&output=csv"
+    },
+    "shift-disturbers": {
+      name: "Shift Disturbers",
+      division: "monday",
+      seasonUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS6bp6OYqzmCHp57lzJp652qBX_uCvwu8C4UolhVDMiMZQ8IslmxbahNDqUcTxcvJ4-lT_Rp-0AV8cC/pub?gid=0&single=true&output=csv",
+      gamesUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vS6bp6OYqzmCHp57lzJp652qBX_uCvwu8C4UolhVDMiMZQ8IslmxbahNDqUcTxcvJ4-lT_Rp-0AV8cC/pub?gid=217381119&single=true&output=csv"
+    },
+    "rosies-degenerates": {
+      name: "Rosie's Degenerates",
+      division: "monday",
+      seasonUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRc4Q2SkDOFv517kImPHbX8g-2VtNKshAr-c917r48l7k5M8chZ2av_4VoHx2jfvGanFuWRkPC0EoeX/pub?gid=0&single=true&output=csv",
+      gamesUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRc4Q2SkDOFv517kImPHbX8g-2VtNKshAr-c917r48l7k5M8chZ2av_4VoHx2jfvGanFuWRkPC0EoeX/pub?gid=217381119&single=true&output=csv"
+    },
+    "gugger": {
+      name: "Gugger",
+      division: "monday",
+      seasonUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjEvJ9Lu7Rsl2pcCseDjLeVDarI-vzusqJtM_b9ON8dMJZ5iiwI6NLb7sGUMYhAD6_1YMzuWsik4j7/pub?gid=0&single=true&output=csv",
+      gamesUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjEvJ9Lu7Rsl2pcCseDjLeVDarI-vzusqJtM_b9ON8dMJZ5iiwI6NLb7sGUMYhAD6_1YMzuWsik4j7/pub?gid=217381119&single=true&output=csv"
+    },
+    "face-melters": {
+      name: "Face Melters",
+      division: "monday",
+      seasonUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQBdGNr51lnkCF8wLdFWdR0C-S-tbH1apm3BjFRsOXu_ArLDvjVYWKZn1aasRBSWwRmXW3yq5O6HgeW/pub?gid=0&single=true&output=csv",
+      gamesUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQBdGNr51lnkCF8wLdFWdR0C-S-tbH1apm3BjFRsOXu_ArLDvjVYWKZn1aasRBSWwRmXW3yq5O6HgeW/pub?gid=217381119&single=true&output=csv"
     }
   },
 

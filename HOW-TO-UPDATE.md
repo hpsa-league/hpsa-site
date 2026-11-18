@@ -161,6 +161,12 @@ Each can be turned on or off separately. With `date: false` a game shows just th
 
 *Older option:* a division can also have its own `scheduleUrl` in `config.js`, pointing at a tab with the columns Date, Home Team, Away Team, Home Score, Away Score, Status (optional: Time, Field, Week). It is only used when the league-wide `scheduleUrl` at the top is empty.
 
+**Jump links, schedule pages and calendar downloads**
+
+- **Jump links.** Each division page has "Jump to: Standings, Schedule, Division leaders" buttons at the top, so players can skip the long schedule.
+- **Schedule pages.** Division and league schedules show a few game nights at a time, starting at the page with the next game that has not been played. Visitors use **Earlier** and **Later**, or **Show all games**. To change how many nights are on a page, change `schedulePageSize` in `config.js` (`0` shows every game).
+- **Add to my calendar.** Each team page has an **Add to my calendar** button. It downloads an `.ics` file with every game's date, time and diamond. Opening it adds the games to Google Calendar, Apple Calendar or Outlook. It is a copy of the schedule at that moment, so players download it again if the schedule changes. Games need a date (and a time, otherwise they show as all-day events).
+
 ## 7. Playoffs (bracket)
 
 The **Playoffs** page draws a bracket for each division from the **playoffs** tab in the league Master workbook. Change the tab and the bracket follows within a few minutes.

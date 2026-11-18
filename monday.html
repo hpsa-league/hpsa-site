@@ -28,9 +28,16 @@
 
     <div class="content">
       <div class="wrap">
+        <nav class="jump-nav" id="jump-nav" aria-label="Jump to a section">
+          <span>Jump to:</span>
+          <a href="#standings">Standings</a>
+          <a href="#schedule">Schedule</a>
+          <a href="#leaders">Division leaders</a>
+        </nav>
+
         <p class="notice" id="sample-note" hidden>You are looking at sample data. Add this division's sheet links in config.js to show real standings, schedule and leaders.</p>
 
-        <section class="block">
+        <section class="block" id="standings">
           <h2 class="section-title">Standings</h2>
           <p class="section-hint">Select a column heading to sort.</p>
           <div id="standings-table"><p class="empty">Loading standings&hellip;</p></div>
@@ -42,7 +49,7 @@
           <div id="schedule-table"><p class="empty">Loading schedule&hellip;</p></div>
         </section>
 
-        <section class="block">
+        <section class="block" id="leaders">
           <h2 class="section-title">Division leaders</h2>
           <p class="section-hint">Select any stat to rank the players by it. Select it again to flip the order.</p>
           <div id="leaders-table"><p class="empty">Loading leaders&hellip;</p></div>

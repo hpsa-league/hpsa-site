@@ -34,7 +34,7 @@ window.HPSA = {
      (see HOW-TO-UPDATE.md, section 6). One tab feeds the Schedule page,
      every division page and every team page. While this is empty, the
      per-division scheduleUrl links below (or sample data) are used.        */
-  scheduleUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRdoYPZoNeRmA7IqLHM_ceBDQZc52lTnVDIyB3lqzlDGQmLkVQmph0TBMCxpEBTc1Rh4uW4_fhspgXo/pub?gid=270377199&single=true&output=csv",
+  scheduleUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRD_CCRnVBBfNP5mGxBJGKMsEACf19ULHiqohT89BAuP685WaeoqSgL9bv_Eok_KN8bfPDMXTxXSANX/pub?gid=270377199&single=true&output=csv",
 
   /* What the schedule shows. Set any of these to true to bring it back:
        date   : the day and date of each game, e.g. "Monday May 4" (off: just "Monday")

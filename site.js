@@ -108,7 +108,21 @@
         item.children.forEach(function (c) {
           var a = el('a', { href: c.href }, c.label);
           if (c.href === cur) a.setAttribute('aria-current', 'page');
-          sub.append(el('li', {}, a));
+          var teams = c.division ? teamsOf(c.division) : [];
+          var li2 = el('li', { class: 'sub-item' });
+          if (teams.length) {
+            li2.classList.add('has-teams');
+            var tg = el('button', { class: 'sub-toggle', type: 'button', 'aria-expanded': 'false', 'aria-label': 'Show ' + c.label + ' teams' });
+            tg.addEventListener('click', function (e) {
+              e.stopPropagation();
+              var o = li2.classList.toggle('open');
+              tg.setAttribute('aria-expanded', o ? 'true' : 'false');
+            });
+            var subsub = el('ul', { class: 'subsub' });
+            teams.forEach(function (tm) { subsub.append(el('li', {}, el('a', { href: 'team.html#' + tm.slug }, tm.name))); });
+            li2.append(el('div', { class: 'sub-row' }, a, tg), subsub);
+          } else li2.append(a);
+          sub.append(li2);
         });
         btn.addEventListener('click', function () {
           var open = li.classList.toggle('open');
@@ -136,11 +150,11 @@
       if (!header.contains(e.target)) {
         header.classList.remove('nav-open');
         burger.setAttribute('aria-expanded', 'false'); burger.textContent = 'Menu';
-        header.querySelectorAll('.has-sub.open').forEach(function (n) { n.classList.remove('open'); });
+        header.querySelectorAll('.has-sub.open, .sub-item.open').forEach(function (n) { n.classList.remove('open'); });
       }
     });
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') header.querySelectorAll('.has-sub.open').forEach(function (n) { n.classList.remove('open'); });
+      if (e.key === 'Escape') header.querySelectorAll('.has-sub.open, .sub-item.open').forEach(function (n) { n.classList.remove('open'); });
     });
 
     var banner = el('a', { class: 'top-banner', href: 'index.html', 'aria-label': CFG.fullName + ' home' },
@@ -200,6 +214,7 @@
   }
 
   /* ---------------- sortable table ---------------- */
+  function findColIn(hs, re) { for (var k = 0; k < hs.length; k++) if (re.test(hs[k].trim())) return k; return -1; }
   function buildTable(host, data, opts) {
     var headers = data.headers, rows = data.rows;
     var lower = (CFG.lowerIsBetter || []).map(function (s) { return s.toUpperCase(); });
@@ -222,6 +237,9 @@
 
     var items = rows.map(function (r, n) { return { r: r, n: n }; });
     var sort = { i: -1, dir: 1 }, query = '', showAll = false;
+    // Player stats tables start sorted by batting average, best first (third click on a header returns to the sheet's order).
+    var avgI = findColIn(headers, /^avg$/i);
+    if (nameI >= 0 && avgI >= 0 && numeric[avgI]) sort = { i: avgI, dir: -1 };
 
     var wrap = el('div', { class: 'table-wrap split' });
     var note = el('p', { class: 'table-note', 'aria-live': 'polite' });
@@ -419,6 +437,13 @@
     }
 
     var sched = $('#schedule-table');
+    var jumpNav = $('#jump-nav'), divTeams = teamsOf(key);
+    if (jumpNav && divTeams.length) {
+      var sel = el('select', { id: 'team-jump', 'aria-label': 'Go to a team page' }, el('option', { value: '', text: 'Go to a team…' }));
+      divTeams.forEach(function (tm) { sel.append(el('option', { value: tm.slug, text: tm.name })); });
+      sel.addEventListener('change', function () { if (sel.value) location.href = 'team.html#' + sel.value; });
+      jumpNav.append(sel);
+    }
     // No sheet links yet (Tuesday/Wednesday for now): show "coming soon" instead of sample data
     var comingSoon = !div.standingsUrl && !div.leadersUrl;
     if (comingSoon) {
@@ -647,9 +672,9 @@
     return sums;
   }
 
-  function loadGames(slug) {
+  function loadGames(slug, playoff) {
     var t = CFG.teams[slug], smp = (SAMPLE.teams || {})[slug] || {};
-    return loadTable(t.gamesUrl, smp.games).then(function (res) {
+    return loadTable(playoff ? (t.playoffGamesUrl || '') : t.gamesUrl, playoff ? '' : smp.games).then(function (res) {
       var g = groupGames(res.table);
       if (!g) throw new Error('no Game column');
       g.nameI = findCol(g.headers, NAME_RE);
@@ -661,7 +686,17 @@
     });
   }
 
-  function gameHref(slug, G) { return 'game.html#' + slug + '--' + G.slug; }
+  function gameHref(slug, G, playoff) { return 'game.html#' + slug + '--' + G.slug + (playoff ? '--playoffs' : ''); }
+  function teamsOf(divKey) {
+    return Object.keys(CFG.teams || {}).filter(function (k) { return CFG.teams[k].division === divKey; })
+      .map(function (k) { return { slug: k, name: CFG.teams[k].name }; })
+      .sort(function (x, y) { return x.name.localeCompare(y.name); });
+  }
+  // "W 7-5" -> a coloured badge
+  function resultBadge(text) {
+    var m = String(text || '').trim().match(/^([WLT])\b/i);
+    return el('span', { class: 'result-badge' + (m ? ' is-' + m[1].toLowerCase() : ''), text: text });
+  }
   function showSampleNote(used) { var n = $('#sample-note'); if (n && used) n.hidden = false; }
   function problem(host, text) { host.textContent = ''; host.append(el('p', { class: 'empty', text: text })); }
 
@@ -669,6 +704,17 @@
     var m = document.querySelector('meta[name="description"]');
     if (!m) { m = document.createElement('meta'); m.setAttribute('name', 'description'); document.head.append(m); }
     m.setAttribute('content', desc);
+  }
+
+  function gameGrid(slug, list, playoff) {
+    var ul = el('ul', { class: 'game-grid' });
+    list.forEach(function (G) {
+      var a = el('a', { class: 'game-link', href: gameHref(slug, G, playoff) }, el('span', { class: 'game-name', text: G.title }));
+      if (G.title !== G.label) a.append(el('span', { class: 'game-detail', text: G.label }));
+      a.append(G.result ? resultBadge(G.result) : el('span', { class: 'game-detail', text: 'Result to come' }));
+      ul.append(el('li', {}, a));
+    });
+    return ul;
   }
 
   function initTeamPage() {
@@ -714,20 +760,53 @@
       var box = $('#team-games');
       var list = res.grouped.games;
       if (!list.length) { problem(box, 'No games have been played yet.'); return; }
-      var ul = el('ul', { class: 'game-grid' });
-      list.forEach(function (G) {
-        var a = el('a', { class: 'game-link', href: gameHref(slug, G) }, el('span', { class: 'game-name', text: G.title }));
-        if (G.title !== G.label) a.append(el('span', { class: 'game-detail', text: G.label }));
-        if (G.result) a.append(el('span', { class: 'game-detail game-result', text: G.result }));
-        ul.append(el('li', {}, a));
-      });
       box.textContent = '';
-      box.append(ul);
+      box.append(gameGrid(slug, list, false));
     }).catch(function () {
       problem($('#team-games'), 'Game-by-game stats can’t be shown right now. Check that the combined games tab is published and its link is in config.js.');
     });
 
-    Promise.all([season, schedule, games]).then(function () { showSampleNote(used); });
+    // Roster: its own tab (Name, #, Position) published from the team's workbook; link goes in config.js as rosterUrl
+    var rosterSec = $('#roster');
+    var roster = Promise.resolve();
+    if (rosterSec && t.rosterUrl) {
+      rosterSec.hidden = false;
+      roster = loadTable(t.rosterUrl, '').then(function (res) {
+        if (!res.table.headers.length || !res.table.rows.length) throw new Error('empty');
+        buildTable($('#team-roster'), res.table, { computedRank: false, search: false });
+      }).catch(function () {
+        problem($('#team-roster'), 'The roster can’t be shown right now. Check that the Roster tab is published and its link is in config.js.');
+      });
+    }
+
+    // Playoff stats: a separate "playoff master stats" tab and playoff games from the same workbook
+    var poSec = $('#playoff-stats');
+    var playoffs = Promise.resolve();
+    if (poSec && (t.playoffSeasonUrl || t.playoffGamesUrl)) {
+      poSec.hidden = false;
+      var pt = !t.playoffSeasonUrl ? Promise.resolve() : loadTable(t.playoffSeasonUrl, '').then(function (res) {
+        if (!res.table.headers.length || !res.table.rows.length) throw new Error('empty');
+        buildTable($('#team-playoff-totals'), res.table, { computedRank: true, search: false });
+      }).catch(function () {
+        problem($('#team-playoff-totals'), 'Playoff totals will appear here once playoff stats are entered.');
+      });
+      var pg = !t.playoffGamesUrl ? Promise.resolve() : loadGames(slug, true).then(function (res) {
+        var pl = res.grouped.games;
+        if (!pl.length) return;
+        var pb = $('#team-playoff-games');
+        pb.textContent = '';
+        pb.append(el('h3', { class: 'sub-title', text: 'Playoff games' }), gameGrid(slug, pl, true));
+      }).catch(function () { /* no playoff games yet */ });
+      playoffs = Promise.all([pt, pg]);
+    }
+
+    // jump links only for the sections that are showing
+    document.querySelectorAll('.jump-nav a[data-sec]').forEach(function (a) {
+      var sec = document.getElementById(a.getAttribute('data-sec'));
+      if (sec && sec.hidden) a.hidden = true;
+    });
+
+    Promise.all([season, schedule, games, roster, playoffs]).then(function () { showSampleNote(used); });
   }
 
   function initGamePage() {
@@ -736,7 +815,7 @@
 
     function render() {
       var parts = decodeURIComponent(location.hash.replace(/^#/, '')).split('--');
-      var slug = parts[0], gslug = parts[1] || '';
+      var slug = parts[0], gslug = parts[1] || '', po = parts[2] === 'playoffs';
       var t = (CFG.teams || {})[slug];
       host.textContent = '';
       window.scrollTo(0, 0);
@@ -745,7 +824,7 @@
       var back = el('p', { class: 'crumbs' }, el('a', { href: 'team.html#' + slug }, 'Back to ' + t.name));
       host.append(back, el('p', { class: 'empty', text: 'Loading game…' }));
 
-      loadGames(slug).then(function (res) {
+      loadGames(slug, po).then(function (res) {
         var g = res.grouped, list = g.games;
         var at = -1;
         list.forEach(function (G, i) { if (G.slug === gslug) at = i; });
@@ -759,8 +838,10 @@
         document.title = G.title + ' | ' + t.name + ' | HPSA';
         $('#game-title').textContent = G.title;
         var bits = [t.name];
-        var extra = [G.title !== G.label ? G.label : '', G.result].filter(Boolean);
-        $('#game-sub').textContent = extra.length ? t.name + ' · ' + extra.join(' · ') : t.name;
+        var extra = [po ? 'Playoffs' : '', G.title !== G.label ? G.label : ''].filter(Boolean);
+        var subEl = $('#game-sub');
+        subEl.textContent = extra.length ? t.name + ' · ' + extra.join(' · ') : t.name;
+        if (G.result) subEl.append(' ', resultBadge(G.result));
         showSampleNote(res.sample);
 
         host.append(el('p', { class: 'section-hint', text: 'Select any stat to rank the players by it. Select it again to flip the order.' }));
@@ -769,8 +850,8 @@
         buildTable(box, { headers: g.headers, rows: G.rows }, { computedRank: false, search: false, footer: totalsRow(g.headers, G.rows, g.nameI) });
 
         var pager = el('div', { class: 'pager' });
-        pager.append(at > 0 ? el('a', { href: gameHref(slug, list[at - 1]) }, 'Previous: ' + list[at - 1].title) : el('span', {}));
-        pager.append(at < list.length - 1 ? el('a', { href: gameHref(slug, list[at + 1]) }, 'Next: ' + list[at + 1].title) : el('span', {}));
+        pager.append(at > 0 ? el('a', { href: gameHref(slug, list[at - 1], po) }, 'Previous: ' + list[at - 1].title) : el('span', {}));
+        pager.append(at < list.length - 1 ? el('a', { href: gameHref(slug, list[at + 1], po) }, 'Next: ' + list[at + 1].title) : el('span', {}));
         host.append(pager);
       }).catch(function () {
         host.textContent = '';
@@ -1058,7 +1139,7 @@
         if (pageCount > 1) {
           if (f.all) {
             makePager = function () {
-              return el('div', { class: 'pager' }, pbtn('Show a few game nights at a time', 'chip', false, function () { f.all = false; draw(); host.scrollIntoView({ block: 'start' }); }));
+              return el('div', { class: 'sched-pager' }, pbtn('Show a few game nights at a time', 'chip', false, function () { f.all = false; draw(); host.scrollIntoView({ block: 'start' }); }));
             };
           } else {
             if (f.page == null) {
@@ -1071,9 +1152,9 @@
             var go = function (n) { f.page = n; draw(); host.scrollIntoView({ block: 'start' }); };
             var cur = f.page;
             makePager = function () {
-              return el('div', { class: 'pager' },
+              return el('div', { class: 'sched-pager' },
                 pbtn('‹ Earlier', 'chip', cur === 0, function () { go(cur - 1); }),
-                el('span', { class: 'pager-label' }, el('strong', { text: keep[0] + (keep.length > 1 ? ' to ' + keep[keep.length - 1] : '') }), el('small', { text: 'Page ' + (cur + 1) + ' of ' + pageCount })),
+                el('span', { class: 'sched-pager-label' }, el('strong', { text: keep[0] + (keep.length > 1 ? ' to ' + keep[keep.length - 1] : '') }), el('small', { text: 'Page ' + (cur + 1) + ' of ' + pageCount })),
                 pbtn('Later ›', 'chip', cur === pageCount - 1, function () { go(cur + 1); }),
                 pbtn('Show all games', 'chip chip-plain', false, function () { f.all = true; draw(); }));
             };

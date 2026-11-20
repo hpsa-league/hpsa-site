@@ -363,12 +363,45 @@ html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
 /* schedule pages (Earlier / Later) */
-.pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .5rem .75rem; margin: 1rem 0; }
-.pager .pager-label { display: flex; flex-direction: column; align-items: center; text-align: center; color: var(--navy); min-width: 10rem; }
-.pager .pager-label small { color: #555; }
-.pager .chip:disabled { opacity: .4; cursor: default; }
-.pager .chip-plain { border-style: dashed; }
+.sched-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .5rem .75rem; margin: 1rem 0; }
+.sched-pager .sched-pager-label { display: flex; flex-direction: column; align-items: center; text-align: center; color: var(--navy); min-width: 10rem; }
+.sched-pager .sched-pager-label small { color: #555; }
+.sched-pager .chip:disabled { opacity: .4; cursor: default; }
+.sched-pager .chip-plain { border-style: dashed; }
 
 /* add to calendar */
 .cal-box { margin: 0 0 1rem; }
 .cal-box .section-hint { margin: .4rem 0 0; }
+
+/* result badges (W / L / T) */
+.result-badge { display: inline-block; align-self: flex-start; font-weight: 800; font-size: .95rem; padding: .15rem .6rem; border-radius: 999px; background: var(--tint); color: var(--navy); border: 2px solid var(--line); }
+.result-badge.is-w { background: #e3f4e7; border-color: #2f8f4a; color: #17612d; }
+.result-badge.is-l { background: #fbe7e7; border-color: #c0392b; color: #8e2118; }
+.result-badge.is-t { background: #eef1f6; border-color: #7a8aa6; color: #34425e; }
+.crumbs + * .result-badge, #game-sub .result-badge { margin-left: .5rem; }
+.sub-title { font-size: 1.3rem; margin: 1.5rem 0 .25rem; color: var(--navy); }
+
+/* team dropdown on division pages */
+.jump-nav select { font: inherit; font-weight: 600; padding: .4rem .8rem; border-radius: 999px; border: 2px solid var(--line); background: var(--white); color: var(--navy); max-width: 100%; }
+.jump-nav select:hover { border-color: var(--blue); }
+
+/* team sub-menus inside Divisions */
+.sub-row { display: flex; align-items: stretch; }
+.sub-row a { flex: 1; }
+.sub-toggle { flex: none; width: 2.6rem; background: none; border: 0; cursor: pointer; color: var(--navy); position: relative; }
+.sub-toggle::after { content: ""; position: absolute; left: 50%; top: 50%; margin: -5px 0 0 -3px; border: 5px solid transparent; border-left-color: currentColor; border-right-width: 0; transition: transform .15s; }
+.sub-item.open > .sub-row .sub-toggle::after { transform: rotate(90deg) translate(0, 1px); }
+.sub-toggle:hover { background: var(--tint); }
+.subsub { display: none; list-style: none; margin: 0; padding: .3rem 0; }
+.subsub a { padding: .5rem 1rem .5rem 1.6rem; font-weight: 500; font-size: .95rem; }
+.sub-item.open > .subsub { display: block; background: #f6f8fc; }
+@media (min-width: 1181px) {
+  .sub-item { position: relative; }
+  .subsub { position: absolute; left: 100%; top: 0; min-width: 14rem; background: var(--white); border: 1px solid var(--line); border-top: 3px solid var(--blue); box-shadow: 0 10px 24px rgba(15, 27, 51, .15); padding: .4rem 0; }
+  .sub-item.has-teams:hover > .subsub, .sub-item.has-teams:focus-within > .subsub { display: block; background: var(--white); }
+  .sub-item.has-teams .sub-toggle { width: 2rem; }
+  .sub-item.open > .subsub { background: var(--white); }
+}
+@media (max-width: 1180px) {
+  .subsub { padding-left: 1rem; }
+}

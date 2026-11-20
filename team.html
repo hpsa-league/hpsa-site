@@ -30,7 +30,9 @@
           <nav class="jump-nav" aria-label="Jump to a section">
             <span>Jump to:</span>
             <a href="#schedule">Schedule</a>
+            <a href="#roster" data-sec="roster">Roster</a>
             <a href="#season">Season totals</a>
+            <a href="#playoff-stats" data-sec="playoff-stats">Playoff stats</a>
             <a href="#game-by-game">Game by game</a>
           </nav>
 
@@ -40,10 +42,22 @@
             <div id="team-schedule"><p class="empty">Loading schedule&hellip;</p></div>
           </section>
 
+          <section class="block" id="roster" hidden>
+            <h2 class="section-title">Roster</h2>
+            <div id="team-roster"><p class="empty">Loading roster&hellip;</p></div>
+          </section>
+
           <section class="block" id="season">
             <h2 class="section-title">Season totals</h2>
             <p class="section-hint">Select any stat to rank the players by it. Select it again to flip the order.</p>
             <div id="team-season"><p class="empty">Loading season totals&hellip;</p></div>
+          </section>
+
+          <section class="block" id="playoff-stats" hidden>
+            <h2 class="section-title">Playoff stats</h2>
+            <p class="section-hint">Playoff games only. These are separate from the regular-season totals above.</p>
+            <div id="team-playoff-totals"><p class="empty">Loading playoff totals&hellip;</p></div>
+            <div id="team-playoff-games"></div>
           </section>
 
           <section class="block" id="game-by-game">

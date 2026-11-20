@@ -167,6 +167,19 @@ Each can be turned on or off separately. With `date: false` a game shows just th
 - **Schedule pages.** Division and league schedules show a few game nights at a time, starting at the page with the next game that has not been played. Visitors use **Earlier** and **Later**, or **Show all games**. To change how many nights are on a page, change `schedulePageSize` in `config.js` (`0` shows every game).
 - **Add to my calendar.** Each team page has an **Add to my calendar** button. It downloads an `.ics` file with every game's date, time and diamond. Opening it adds the games to Google Calendar, Apple Calendar or Outlook. It is a copy of the schedule at that moment, so players download it again if the schedule changes. Games need a date (and a time, otherwise they show as all-day events).
 
+**Team menus, results, rosters and playoff stats**
+
+- **Team drop-downs.** In the top menu, Divisions, then Monday (or Tuesday, Wednesday), opens a list of that division's teams. On phones tap the small arrow beside the division. Each division page also has a "Go to a team" drop-down next to the jump links. Both fill themselves in from the `teams` list in `config.js`, so a new team appears as soon as you add it there.
+- **Results on each game.** The Game by game cards at the bottom of every team page show a green **W**, red **L** or grey **T** badge with the score (for example "W 7-5"). It comes from the Result column of the team's All Games tab, so the team's Game Info tab has to be filled in. A game with no result shows "Result to come".
+- **Rosters.** In the team's workbook, add a tab called **Roster** with the headings `Player Name`, `#`, `Position` (extra columns such as Bats or Throws also show). Publish that tab as CSV (File, Share, Publish to web) and paste its link into the team's block in `config.js` as `rosterUrl: "..."`. A team without `rosterUrl` shows no Roster section.
+- **Playoff stats.** Playoff stats live in the same workbook as the regular season but are kept apart from the season totals:
+  1. Make five tabs named `Playoff1` to `Playoff5` (copy a Game tab and rename it) and type the playoff player stats on them the same way as a regular game.
+  2. Make a tab called `Playoff Info` with the headings `Game`, `Opponent`, `Date`, `Result` and one row per playoff game. The Game text must be `Playoff Game 1`, `Playoff Game 2` and so on. Type the Result like `W 7-5`.
+  3. Make a tab called `All Playoff Games` and paste `formulas/playoff-all-games.txt` into A1.
+  4. Make a tab called `Playoff master stats` and paste `formulas/playoff-totals.txt` into A1.
+  5. Publish `Playoff master stats` and `All Playoff Games` as CSV and add both links to the team's block in `config.js`: `playoffSeasonUrl: "..."` (Playoff master stats) and `playoffGamesUrl: "..."` (All Playoff Games).
+  The team page then shows a Playoff stats section with the playoff totals and the playoff games (each opens like a regular game page). Teams without these links show no playoff section.
+
 ## 7. Playoffs (bracket)
 
 The **Playoffs** page draws a bracket for each division from the **playoffs** tab in the league Master workbook. Change the tab and the bracket follows within a few minutes.

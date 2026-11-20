@@ -49,7 +49,7 @@ window.HPSA = {
      Paste the published CSV link of the "playoffs" tab here
      (see HOW-TO-UPDATE.md, section 7). While it is empty the page shows
      a sample bracket.                                                     */
-  playoffsUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRdoYPZoNeRmA7IqLHM_ceBDQZc52lTnVDIyB3lqzlDGQmLkVQmph0TBMCxpEBTc1Rh4uW4_fhspgXo/pub?gid=473245405&single=true&output=csv",
+  playoffsUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRD_CCRnVBBfNP5mGxBJGKMsEACf19ULHiqohT89BAuP685WaeoqSgL9bv_Eok_KN8bfPDMXTxXSANX/pub?gid=473245405&single=true&output=csv",
 
   /* ---- CONTACT PAGE ----------------------------------------------------
      formUrl : the link of a Google Form (see HOW-TO-UPDATE.md, section 8).
@@ -113,12 +113,18 @@ window.HPSA = {
        gamesUrl  : the published CSV of ONE combined tab with a row for every
                    player in every game (see HOW-TO-UPDATE.md, section 4).
                    Leave it empty until that tab exists.                      */
+  // Optional extras for any team (add inside the team's block, with commas):
+  //   rosterUrl: "published link of the team's Roster tab (columns: Player Name, #, Position)",
+  //   playoffSeasonUrl: "published link of the team's Playoff master stats tab",
+  //   playoffGamesUrl: "published link of the team's All Playoff Games tab",
   teams: {
     "globo-gym-purple-cobras": {
       name: "Globo Gym Purple Cobras",
       division: "monday",
-      seasonUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR2Sgq4hJvvpr5x-F5wFaqJsy7XVhZTcWAZDi8UChvq8t_LBo19xdrOkrMODwp25JeEiBPop0pUVw8C/pub?gid=0&single=true&output=csv",
-      gamesUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vR2Sgq4hJvvpr5x-F5wFaqJsy7XVhZTcWAZDi8UChvq8t_LBo19xdrOkrMODwp25JeEiBPop0pUVw8C/pub?gid=217381119&single=true&output=csv"
+      seasonUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjNZnxVqpb9HJbDiQSDGT_nzoWD6q58R7FSRsMRmdx1zetfIDk3Qvz_DpeuRPicxsYx0MaETacrzrO/pub?gid=0&single=true&output=csv",
+      gamesUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjNZnxVqpb9HJbDiQSDGT_nzoWD6q58R7FSRsMRmdx1zetfIDk3Qvz_DpeuRPicxsYx0MaETacrzrO/pub?gid=217381119&single=true&output=csv",
+      playoffSeasonUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjNZnxVqpb9HJbDiQSDGT_nzoWD6q58R7FSRsMRmdx1zetfIDk3Qvz_DpeuRPicxsYx0MaETacrzrO/pub?gid=338023727&single=true&output=csv",
+      playoffGamesUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSjNZnxVqpb9HJbDiQSDGT_nzoWD6q58R7FSRsMRmdx1zetfIDk3Qvz_DpeuRPicxsYx0MaETacrzrO/pub?gid=267048505&single=true&output=csv"
     },
     "crew": {
       name: "Crew",
@@ -188,9 +194,9 @@ window.HPSA = {
   /* ---- MENU ------------------------------------------------------------ */
   nav: [
     { label: "Divisions", children: [
-      { label: "Monday",    href: "monday.html" },
-      { label: "Tuesday",   href: "tuesday.html" },
-      { label: "Wednesday", href: "wednesday.html" }
+      { label: "Monday",    href: "monday.html", division: "monday" },
+      { label: "Tuesday",   href: "tuesday.html", division: "tuesday" },
+      { label: "Wednesday", href: "wednesday.html", division: "wednesday" }
     ]},
     { label: "Schedule",             href: "schedule.html" },
     { label: "Playoffs",             href: "playoffs.html" },

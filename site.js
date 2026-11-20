@@ -484,7 +484,8 @@
       var div = CFG.divisions[key];
       if (!div) return;
       var line = $('.div-first', card);
-      loadTable(div.standingsUrl, '').then(function (res) {
+      if (!div.standingsUrl) line.textContent = 'Under construction';
+      else loadTable(div.standingsUrl, '').then(function (res) {
         var t = res.table, ti = t.headers.findIndex(function (h) { return /^team$/i.test(h); });
         if (ti >= 0 && t.rows[0] && t.rows[0][ti]) line.textContent = 'In first place: ' + t.rows[0][ti];
       }).catch(function () { /* leave the line blank */ });

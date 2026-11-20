@@ -1096,16 +1096,19 @@
         var my = parseFloat(mine ? g.hs : g.as), their = parseFloat(mine ? g.as : g.hs);
         li.append(el('div', { class: 'sched-opp' }, el('span', { class: 'sched-vs', text: mine ? 'vs' : '@' }), teamCell(opp)));
         var end = el('div', { class: 'sched-end' });
-        if (g.played) {
+        var off = /rain|postpon|ppd|cancel/i.test(g.note || '') || (g.played && my === 0 && their === 0);
+        if (g.played && !off) {
           var r = my > their ? 'W' : my < their ? 'L' : 'T';
           end.append(el('span', { class: 'sched-result res-' + r.toLowerCase(), text: r + ' ' + my + '-' + their }));
         }
-        if (g.note && showing('status')) end.append(el('span', { class: 'sched-badge', text: g.note }));
+        if (off) end.append(el('span', { class: 'sched-badge', text: g.note && /rain|postpon|ppd|cancel/i.test(g.note) ? g.note : 'Rained out' }));
+        else if (g.note && showing('status')) end.append(el('span', { class: 'sched-badge', text: g.note }));
         li.append(end);
       } else {
-        var hw = g.played && parseFloat(g.hs) > parseFloat(g.as), aw = g.played && parseFloat(g.as) > parseFloat(g.hs);
-        li.append(el('div', { class: 'sched-match' }, sideRow(g.away, g.played ? g.as : '', aw, false), sideRow(g.home, g.played ? g.hs : '', hw, true)));
-        li.append(el('div', { class: 'sched-end' }, g.note && showing('status') ? el('span', { class: 'sched-badge', text: g.note }) : null));
+        var offG = /rain|postpon|ppd|cancel/i.test(g.note || '') || (g.played && parseFloat(g.hs) === 0 && parseFloat(g.as) === 0);
+        var hw = g.played && !offG && parseFloat(g.hs) > parseFloat(g.as), aw = g.played && !offG && parseFloat(g.as) > parseFloat(g.hs);
+        li.append(el('div', { class: 'sched-match' }, sideRow(g.away, g.played && !offG ? g.as : '', aw, false), sideRow(g.home, g.played && !offG ? g.hs : '', hw, true)));
+        li.append(el('div', { class: 'sched-end' }, offG ? el('span', { class: 'sched-badge', text: g.note && /rain|postpon|ppd|cancel/i.test(g.note) ? g.note : 'Rained out' }) : g.note && showing('status') ? el('span', { class: 'sched-badge', text: g.note }) : null));
       }
       return li;
     }

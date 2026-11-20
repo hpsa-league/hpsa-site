@@ -378,6 +378,7 @@ html { scroll-behavior: smooth; }
 .result-badge.is-w { background: #e3f4e7; border-color: #2f8f4a; color: #17612d; }
 .result-badge.is-l { background: #fbe7e7; border-color: #c0392b; color: #8e2118; }
 .result-badge.is-t { background: #eef1f6; border-color: #7a8aa6; color: #34425e; }
+.result-badge.is-off { background: #fff4dc; border-color: #d9a21b; color: #7a5a00; }
 .crumbs + * .result-badge, #game-sub .result-badge { margin-left: .5rem; }
 .sub-title { font-size: 1.3rem; margin: 1.5rem 0 .25rem; color: var(--navy); }
 

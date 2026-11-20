@@ -694,8 +694,12 @@
   }
   // "W 7-5" -> a coloured badge
   function resultBadge(text) {
-    var m = String(text || '').trim().match(/^([WLT])\b/i);
-    return el('span', { class: 'result-badge' + (m ? ' is-' + m[1].toLowerCase() : ''), text: text });
+    var t = String(text || '').trim();
+    // A 0-0 "tie" is a game that was not played (rain out): show that instead of a T.
+    if (/^T\s*0\s*[-\u2013]\s*0$/i.test(t)) t = 'Rained out';
+    var m = t.match(/^([WLT])\b/i);
+    var off = !m && /rain|postpon|ppd|cancel/i.test(t);
+    return el('span', { class: 'result-badge' + (m ? ' is-' + m[1].toLowerCase() : off ? ' is-off' : ''), text: t });
   }
   function showSampleNote(used) { var n = $('#sample-note'); if (n && used) n.hidden = false; }
   function problem(host, text) { host.textContent = ''; host.append(el('p', { class: 'empty', text: text })); }

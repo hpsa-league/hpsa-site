@@ -725,6 +725,10 @@
     var host = $('#team-view');
     if (!host || document.body.getAttribute('data-page') !== 'team') return;
     var slug = decodeURIComponent(location.hash.replace(/^#/, ''));
+    // Choosing another team from the menu only changes the #part of the address, so load the new team.
+    window.addEventListener('hashchange', function () {
+      if (decodeURIComponent(location.hash.replace(/^#/, '')) !== slug) location.reload();
+    });
     var t = (CFG.teams || {})[slug];
     if (!t) { problem(host, 'We could not find that team. Open a division and choose the team from the standings.'); return; }
 
